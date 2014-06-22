@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
         }
 
       json_t *kj = json_object_get(r, "k");
-      if(kj == NULL || !json_is_real(kj))
+      if(kj == NULL || !json_is_number(kj))
         {
           std::cout << "Found a non-real identifier for reaction rates" << std::endl;
 
@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
       int B = json_integer_value(Bj);
       int A = json_integer_value(Aj);
      
-      double k = json_real_value(kj);
+      double k = json_number_value(kj);
 
       reacs.brm.insert(Reactions::brmT::value_type(mpp(A, B), BinaryReaction(A, B, C, k)));
     }
@@ -255,7 +255,7 @@ int main(int argc, char **argv) {
         }
 
       json_t *kj = json_object_get(r, "k");
-      if(kj == NULL || !json_is_real(kj))
+      if(kj == NULL || !json_is_number(kj))
         {
           std::cout << "Found a non-real identifier for reaction rates" << std::endl;
 
@@ -269,7 +269,7 @@ int main(int argc, char **argv) {
       int B = (Bj == NULL) ? -1 : json_integer_value(Bj);
       int A = json_integer_value(Aj);
      
-      double k = json_real_value(kj);
+      double k = json_number_value(kj);
 
       reacs.mrm.insert(Reactions::mrmT::value_type(A, MonatomicReaction(A, B, C, k)));
     }
@@ -296,7 +296,7 @@ int main(int argc, char **argv) {
         }
 
       json_t *radiusJ = json_object_get(r, "radius");
-      if(radiusJ == NULL || !json_is_real(radiusJ))
+      if(radiusJ == NULL || !json_is_number(radiusJ))
         {
           std::cout << "Found a non-real identifier for reaction rates" << std::endl;
 
@@ -308,7 +308,7 @@ int main(int argc, char **argv) {
 
       json_t *Dj = json_object_get(r, "D");
 
-      if(Dj == NULL || !json_is_real(Dj))
+      if(Dj == NULL || !json_is_number(Dj))
         {
           std::cout << "Found a non-number identifier for B-atoms" << std::endl;
 
@@ -319,8 +319,8 @@ int main(int argc, char **argv) {
         }
 
       int type = json_integer_value(typeJ);
-      double radius = json_real_value(radiusJ);
-      double D = json_real_value(Dj);
+      double radius = json_number_value(radiusJ);
+      double D = json_number_value(Dj);
 
       reacs.bam[type] = BrownianAtom(type, radius, D);
     }

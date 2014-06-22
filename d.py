@@ -23,14 +23,15 @@ def work(args):
 
 pool = Pool(4)
 
-matrix = []
+out = []
 
+dt = 0.1
 for total in totals:
     #distsSq = []
     config = { "X" : X,
                "Y" : X,
                "Z" : X,
-               "dt" : 0.1,
+               "dt" : dt,
                "steps" : 201,
                "printSteps" : 1,
                "monatomic" : [],
@@ -117,15 +118,15 @@ for total in totals:
     #    print key, val
 
     times, values = zip(*sorted(distsSq.items(), key = lambda x : x[0]))
-    times = numpy.array(times) * 0.01;
+    times = numpy.array(times) * dt;
 
     length = len(times)
 
     a, b = numpy.polyfit(times[length / 2 :], values[length / 2 :], 1) / 6
 
-    #print a
+    print "total particles {0}, diffusion constant {1}".format(total, a)
 
-    matrix.append(values)
+    out.append((total, values))
 
     #meansq = numpy.mean(distsSq)
 
@@ -135,7 +136,8 @@ for total in totals:
         
     os.remove(inData)
 
-toPrint = zip(*matrix)
+for total, dataSet in out:
+    matplotlib.pyplot.plot(dataSet)
 
-for row in toPrint:
-    print " ".join(map(str, row))
+matplotlib.pyplot.show()
+matplotlib.pyplot.legend(totals)

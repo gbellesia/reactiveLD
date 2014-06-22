@@ -6,16 +6,29 @@ import os
 import random
 import shlex
 import subprocess
+import sys
 import tempfile
 import random
+import matplotlib.pyplot
 
 Zr = 0
 
+if len(sys.argv) < 2:
+    print "Include an output file -- ./irr.py outfilename"
+    exit(-1)
+
+outputfile = sys.argv[1]
+
 distances = []
 
-for i in range(0, 10000):
-    infile = tempfile.NamedTemporaryFile(dir = "/home/bbales2/ram", delete = False)
-    outfile = tempfile.mktemp(dir = "/home/bbales2/ram")
+for i in range(0, 1000):
+    if os.path.isdir("/home/bbales2/ram"):
+        tmpdir = "/home/bbales2/ram"
+    else:
+        tmpdir = "/tmp"
+
+    infile = tempfile.NamedTemporaryFile(dir = tmpdir, delete = False)
+    outfile = tempfile.mktemp(dir = tmpdir)
 
     theta = math.pi * random.random()
     phi = 2 * math.pi * random.random()
@@ -36,9 +49,9 @@ for i in range(0, 10000):
                           { "type" : 2, "radius" : 0.5, "D" : 0.5 },
                           { "type" : 3, "radius" : 0.5, "D" : 0.5 }],}
     
-    atom2 = { "x" : 5000 + 1.0000001 * math.sin(theta) * math.cos(phi),
-              "y" : 5000 + 1.0000001 * math.sin(theta) * math.sin(phi),
-              "z" : 5000 + 1.0000001 * math.cos(theta),
+    atom2 = { "x" : 5000 + 1.00000001 * math.sin(theta) * math.cos(phi),
+              "y" : 5000 + 1.00000001 * math.sin(theta) * math.sin(phi),
+              "z" : 5000 + 1.00000001 * math.cos(theta),
               "type" : 1 }
 
     config["atoms"].append(atom2)
@@ -53,15 +66,11 @@ for i in range(0, 10000):
     infile.close()
 
     f = open(outfile, 'r')
-    f.readline()
-    f.readline()
-    f.readline()
+    for j in range(0, 14):
+        f.readline()
     count = int(f.readline().strip())
-    f.readline()
-    f.readline()
-    f.readline()
-    f.readline()
-    f.readline()
+    for j in range(0, 5):
+        f.readline()
 
     if count == 0:
         Zr += 1
@@ -86,6 +95,10 @@ for i in range(0, 10000):
     os.remove(outfile)
     os.remove(infile.name)
 
-f = open('distances.txt', 'w')
-f.write(repr([Zr, distances]))
+f = open(outputfile, 'w')
+f.write("\n".join(map(repr, distances)))
 f.close()
+
+matplotlib.pyplot.xlabel('Distances')
+matplotlib.pyplot.hist(distances, 100)
+matplotlib.pyplot.show()
