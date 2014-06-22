@@ -2,6 +2,7 @@
 #include <vector>
 #include <set>
 
+#include "util.hpp"
 #include "Reactions.hpp"
 
 class Particle {
@@ -55,7 +56,7 @@ public:
   //   print error if failure and quit //return -1 if failure
   int insertParticle(double x, double y, double z, int type, int id = -1)
   {
-    indexListT otherParticles = collide(x, y, z, type);
+    indexListT otherParticles = collide(x, y, z, type, id);
 
     if(otherParticles.size() > 0)
       {
@@ -82,13 +83,22 @@ public:
 
     particles[id] = Particle(x, y, z, type);
 
-    bins[idx(x, y, z)].insert(id);
+    int bin = idx(x, y, z);
+
+    //std::cout << "Inserting " << id << " at " << bin << std::endl;
+
+    bins[bin].insert(id);
+
+    auto it = bins[bin].find(id);
+
+    if(it == bins[bin].end())
+      std::cout << "ERRORORORORORORORORORORORORRRRRRRRRR" << std::endl;
 
     return id;
   }
 
   // Return a list of all particles that collide with this atom 
-  indexListT collide(double x, double y, double z, int type)
+  indexListT collide(double x, double y, double z, int type, int id = -1)
   {
     // We use a 3x3x3 collision grid
     // This requires each bin to be 1x times the size of the largest particle
@@ -98,24 +108,45 @@ public:
     std::vector<int> ox = { -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     std::vector<int> oy = { -1, -1, -1, 0, 0, 0, 1, 1, 1, -1, -1, -1, 0, 0, 0, 1, 1, 1, -1, -1, -1, 0, 0, 0, 1, 1, 1 };
     std::vector<int> oz = { -1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1 };
+    //std::vector<int> ox = { 0 };
+    //std::vector<int> oy = { 0 };
+    //std::vector<int> oz = { 0 };
+
+    std::map<int, int> test;
+    std::vector<int> visted;
 
     for(int i = 0; i < (int)ox.size(); i++)
       {
-        int idxx = idx(x + ox[i], y + oy[i], z + oz[i]);
+        int idxx = idx(int(x / dX) + ox[i], int(y / dY) + oy[i], int(z / dZ) + oz[i]);
+        visted.push_back(idxx);
 
         auto binit = bins.find(idxx);
         if(binit != bins.end())
           {
             for(auto it = binit->second.begin(); it != binit->second.end(); it++)
               {
-                Particle pj = particles[*it];
+                if(id != *it)
+                {
+                  if(test.find(*it) != test.end())
+                    {
+                      std::cout << "panic" << std::endl;
+                    }
 
-                double rsq = (pj.x - x) * (pj.x - x) + (pj.y - y) * (pj.y - y) + (pj.z - z) * (pj.z - z);
+                    Particle pj = particles[*it];
+
+                    double dx = cyclicDistance(pj.x, x, X),
+                      dy = cyclicDistance(pj.y, y, Y),
+                      dz = cyclicDistance(pj.z, z, Z);
+
+                    double rsq = dx * dx + dy * dy + dz * dz;
   
-                if(rsq < (reacs.bam[type].radius + reacs.bam[pj.type].radius) * (reacs.bam[type].radius + reacs.bam[pj.type].radius))
-                  {
-                    indexList.insert(indexList.end(), binit->second.begin(), binit->second.end());
-                  }
+                    if(rsq < (reacs.bam[type].radius + reacs.bam[pj.type].radius) * (reacs.bam[type].radius + reacs.bam[pj.type].radius))
+                      {
+                        indexList.push_back(*it);
+                        test[*it] = idxx;
+                        //indexList.insert(indexList.end(), binit->second.begin(), binit->second.end());
+                      }
+                }
               }
           }
       }
@@ -137,13 +168,16 @@ public:
 
     Particle p = it->second;
     
+    //printf("Movin', yo!");
     deleteParticle(it->first);
 
     p.x = x;
     p.y = y;
     p.z = z;
 
+    //std::cout << "inserting particle " << 
     insertParticle(p.x, p.y, p.z, p.type, id);
+    // << std::endl;
   }
 
   // Removes particle from particle list and bins
@@ -151,6 +185,8 @@ public:
   void deleteParticle(int id)
   {
     auto it = particles.find(id);
+
+    //std::cout << "Deleting particle" << id << "\n";
 
     if(it == particles.end())
       {
@@ -160,6 +196,8 @@ public:
       }
 
     Particle &p = it->second;
+
+    //std::cout << " from bin " << idx(p.x, p.y, p.z) << std::endl;
 
     auto binIt = bins.find(idx(p.x, p.y, p.z));
 
@@ -178,6 +216,8 @@ public:
 
         exit(-1);
       }
+
+    particles.erase(it);
 
     binIt->second.erase(indexBinIt);
   }

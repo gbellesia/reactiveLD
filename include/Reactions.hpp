@@ -14,16 +14,17 @@
 const double pi = 3.141592653589793238462643383279502884;
 
 template<class T>
-typename T::iterator select(typename T::iterator it1, typename T::iterator it2, typename T::iterator itend, double dt, double pacc, double r1, double r2)
+typename T::iterator select(typename T::iterator it1, typename T::iterator it2, typename T::iterator itend, double dt, double pacc, std::uniform_real_distribution<double> &uniform, std::mt19937 &generator)
 {
   std::vector<typename T::iterator> opts;
   
   for(typename T::iterator it = it1; it != it2; it++)
     {
       // Check propensity of firing:
-      bool fire = r1 < it->second.k * dt * pacc;
+      double r = uniform(generator);
+      bool fire = r < it->second.k * dt * pacc;
 
-      //printf("r = %f\n", r);
+      //printf("r = %f, %f\n", r, it->second.k * dt * pacc);
 
       // If the reaction doesn't fire, accept the move and we're done
       if(!fire)
@@ -32,18 +33,25 @@ typename T::iterator select(typename T::iterator it1, typename T::iterator it2, 
         }
       
       opts.push_back(it);
+
+      //std::cout << i++ << std::endl;
     }
 
   double sum = 0.0;
-      for(int i = 0; i < (int)opts.size(); i++)
-    sum += (*opts[i]).second.k;
-  
-  double v = r2 * sum;
-  double tsum = 0.0;
+
+  if(opts.size() == 0)
+    return itend;
 
   for(int i = 0; i < (int)opts.size(); i++)
+    sum += (*opts[i]).second.k * dt * pacc;
+  
+  double v = uniform(generator) * sum;
+  double tsum = 0.0;
+
+  //std::cout << "v" << v << " " << sum << std::endl;
+  for(int i = 0; i < (int)opts.size(); i++)
     {
-      tsum += (*opts[i]).second.k;
+      tsum += (*opts[i]).second.k * dt * pacc;
       if(tsum >= v)
 	{
 	  return opts[i];
@@ -305,7 +313,7 @@ public:
 
           //double N = 4 * pi * (R * D * dt + 2 * R * R * sqrt(D * dt / pi));
 
-          paccs[mpp(it->first, it2->first)] = dt / pseps[mpp(it->first, it2->first)].fp.N;
+          paccs[mpp(it->first, it2->first)] = 1 / pseps[mpp(it->first, it2->first)].fp.N;
         }
 
       paccs[mpp(it->first, -1)] = 1.0;

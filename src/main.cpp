@@ -13,33 +13,45 @@
 #include <algorithm>
 #include <set>
 #include <jansson.h>
+#include <iomanip>
 
+#include "util.hpp"
 #include "Reactions.hpp"
 
 #define debug false
 
-int main() {
-  std::random_device rd;
-  std::mt19937 generator(rd());
-  std::uniform_real_distribution<double> uniform(0.0, 1.0);
-  std::normal_distribution<double> gaussian(0.0, 1.0);
-  std::stringstream ss;
+int main(int argc, char **argv) {
+  double X = 10000, Y = 10000, Z = 10000;
 
-  double X = 10, Y = 10, Z = 10;
-  double D = 0.5;
-
-  int N = 10;
+  //int N = 10;
 
   int maxTries = 1000;
 
   Reactions reacs;
 
-  double dt = 1.0;
-  double steps = 100;
+  double dt;
+  int steps;
+  int printSteps;
+
+  // Args are [config] [output]
+
+  if(argc < 4)
+    {
+      std::cout << "Not enough arguments. Input format is: ./bd_run [infile] [outfile] [randomseed]" << std::endl;
+    }
+
+  std::string inFileName(argv[1]), outFileName(argv[2]);
+
+  std::mt19937 generator(atoi(argv[3]));
+  std::uniform_real_distribution<double> uniform(0.0, 1.0);
+  std::normal_distribution<double> gaussian(0.0, 1.0);
+  std::stringstream ss;
+
+  std::ifstream in(inFileName);
 
   // Read in configuration file
   std::string lineInput;
-  while (std::getline(std::cin, lineInput)) {
+  while (std::getline(in, lineInput)) {
     ss << lineInput;
   }
 
@@ -60,9 +72,84 @@ int main() {
       return 1;
     }
 
+  json_t *atomsArray = json_object_get(root, "atoms");
+  json_t *atomsDistributionArray = json_object_get(root, "atomsDist");
   json_t *mArray = json_object_get(root, "monatomic");
+  json_t *Xj = json_object_get(root, "X");
+  json_t *Yj = json_object_get(root, "Y");
+  json_t *Zj = json_object_get(root, "Z");
+  json_t *stepsj = json_object_get(root, "steps");
+  json_t *printStepsj = json_object_get(root, "printSteps");
+  json_t *dtj = json_object_get(root, "dt");
   json_t *bArray = json_object_get(root, "binary");
   json_t *aTypes = json_object_get(root, "types");
+
+  if(Xj == NULL || !json_is_number(Xj))
+    {
+      std::cout << "X must be a number" << std::endl;
+      
+      if(Xj != NULL)
+        json_decref(root);
+      
+      return 1;
+    }
+
+  if(Yj == NULL || !json_is_number(Yj))
+    {
+      std::cout << "Y must be a number" << std::endl;
+      
+      if(Yj != NULL)
+        json_decref(root);
+      
+      return 1;
+    }
+
+  if(Zj == NULL || !json_is_number(Zj))
+    {
+      std::cout << "Z must be a number" << std::endl;
+      
+      if(Zj != NULL)
+        json_decref(root);
+      
+      return 1;
+    }
+
+  if(stepsj == NULL || !json_is_integer(stepsj))
+    {
+      std::cout << "steps must be an integer" << std::endl;
+      
+      if(stepsj != NULL)
+        json_decref(root);
+      
+      return 1;
+    }
+
+  if(printStepsj == NULL || !json_is_integer(printStepsj))
+    {
+      std::cout << "printSteps must be an integer" << std::endl;
+      
+      if(printStepsj != NULL)
+        json_decref(root);
+      
+      return 1;
+    }
+  
+  if(dtj == NULL || !json_is_number(dtj))
+    {
+      std::cout << "dt must be a number" << std::endl;
+      
+      if(dtj != NULL)
+        json_decref(root);
+      
+      return 1;
+    }
+
+  X = json_number_value(Xj);
+  Y = json_number_value(Yj);
+  Z = json_number_value(Zj);
+  steps = json_integer_value(stepsj);
+  printSteps = json_integer_value(printStepsj);
+  dt = json_number_value(dtj);
 
   for(int i = 0; i < (int)json_array_size(bArray); i++)
     {
@@ -97,12 +184,11 @@ int main() {
         }
 
       json_t *Cj = json_object_get(r, "C");
-      if(Cj == NULL || !json_is_integer(Cj))
+      if(Cj != NULL && !json_is_integer(Cj))
         {
           std::cout << "Found a non-number identifier for (C) atoms" << std::endl;
 
-          if(Cj != NULL)
-            json_decref(root);
+          json_decref(root);
 
           return 1;
         }
@@ -118,8 +204,8 @@ int main() {
           return 1;
         }
 
-      int C = json_integer_value(Cj);
-      int B = (Bj == NULL) ? -1 : json_integer_value(Bj);
+      int C = (Cj == NULL) ? -1 : json_integer_value(Cj);
+      int B = json_integer_value(Bj);
       int A = json_integer_value(Aj);
      
       double k = json_real_value(kj);
@@ -163,8 +249,7 @@ int main() {
         {
           std::cout << "Found a non-number identifier for (C) atoms" << std::endl;
 
-          if(Cj != NULL)
-            json_decref(root);
+          json_decref(root);
 
           return 1;
         }
@@ -249,30 +334,176 @@ int main() {
       return 1;
     }
 
-  Particles parts(10, 10, 10, X, Y, Z, reacs);
+  Particles parts(100, 100, 100, X, Y, Z, reacs);
+
+  if(atomsArray != NULL)
+    {
+      for(int i = 0; i < (int)json_array_size(atomsArray); i++)
+        {
+          json_t *r = json_array_get(atomsArray, i);
+          if(!json_is_object(r))
+            {
+              fprintf(stderr, "Found a non-object item where binary reactions should be\n");
+              json_decref(root);
+              return 1;
+            }
+
+          json_t *xj = json_object_get(r, "x");
+          if(xj == NULL || !json_is_number(xj))
+            {
+              std::cout << "x must be a real" << std::endl;
+
+              if(xj != NULL)
+                json_decref(root);
+
+              return 1;
+            }
+
+          json_t *yj = json_object_get(r, "y");
+          if(yj == NULL || !json_is_number(yj))
+            {
+              std::cout << "y must be a real" << std::endl;
+
+              if(yj != NULL)
+                json_decref(root);
+
+              return 1;
+            }
+
+          json_t *zj = json_object_get(r, "z");
+          if(zj != NULL && !json_is_number(zj))
+            {
+              std::cout << "z must be a real" << std::endl;
+
+              if(zj != NULL)
+                json_decref(root);
+
+              return 1;
+            }
+
+          json_t *typej = json_object_get(r, "type");
+          if(typej == NULL || !json_is_integer(typej))
+            {
+              std::cout << "Type must be an integer" << std::endl;
+
+              if(typej != NULL)
+                json_decref(root);
+
+              return 1;
+            }
+
+          double x = json_number_value(xj);
+          double y = json_number_value(yj);
+          double z = json_number_value(zj);
+      
+          int type = json_integer_value(typej);
+
+          parts.insertParticle(x, y, z, type);
+        }
+    }
 
   // Initialize particles
-  for(int n = 0; n < N; n++)
+  std::cout << "Initializing particles" << std::endl;
+
+  if(atomsDistributionArray != NULL)
     {
-      for(int tt = 0; tt < maxTries; tt++)
+      for(int i = 0; i < (int)json_array_size(atomsDistributionArray); i++)
         {
-          double x = X * uniform(generator),
-            y = Y * uniform(generator),
-            z = Z * uniform(generator);
+          json_t *r = json_array_get(atomsDistributionArray, i);
 
-          Particles::indexListT indexList = parts.collide(x, y, z, 1);
-
-          if(indexList.size() < 1)
+          json_t *typej = json_object_get(r, "type");
+          if(typej == NULL || !json_is_integer(typej))
             {
-              parts.insertParticle(x, y, z, 1);
+              std::cout << "Type must be an integer asdf" << std::endl;
+          
+              if(typej != NULL)
+                json_decref(root);
+          
+              return 1;
+            }
 
-              break;
+          json_t *numberj = json_object_get(r, "number");
+          if(numberj == NULL || !json_is_integer(numberj))
+            {
+              std::cout << "Number must be an integer" << std::endl;
+          
+              if(numberj != NULL)
+                json_decref(root);
+          
+              return 1;
+            }
+
+          int type = json_integer_value(typej);
+          int number = json_integer_value(numberj);
+          
+          std::cout << "inserting " << number << " particles of type " << type << std::endl;
+          for(int n = 0; n < number; n++)
+            {
+              int tt;
+              for(tt = 0; tt < maxTries; tt++)
+                {
+                  double x = X * uniform(generator),
+                    y = Y * uniform(generator),
+                    z = Z * uniform(generator);
+
+                  Particles::indexListT indexList = parts.collide(x, y, z, type);
+
+                  if(indexList.size() < 1)
+                    {
+                      parts.insertParticle(x, y, z, type);
+
+                      break;
+                    }
+                }
+
+              if(tt == maxTries)
+                {
+                  std::cout << "Failed to insert required number of particles" << std::endl;
+
+                  return 1;
+                }
             }
         }
     }
 
+  std::cout << " " << parts.particles.size() << std::endl;
+
+  json_decref(root);
+
+  std::ofstream output;
+
+  output.open(outFileName);
+  //output << "reaction fired" << std::endl;
+
+  std::cout << "Runnin' stuff" << std::endl;
+
   for(int s = 0; s < steps; s++)
     {
+      std::cout << s << std::endl;
+      //if(parts.particles.size() < 2)
+      //  output << "wtf has happened?\n" << std::endl;
+      if(s % printSteps == 0)
+        {
+          output << "ITEM: TIMESTEP" << std::endl;
+          output << s << std::endl;
+
+          output << "ITEM: NUMBER OF ATOMS" << std::endl;
+          output << parts.particles.size() << std::endl;
+
+          output << "ITEM: BOX BOUNDS" << std::endl;
+          output << 0.0 << " " << X << std::endl;
+          output << 0.0 << " " << Y << std::endl;
+          output << 0.0 << " " << Z << std::endl;
+          
+          output << "ITEM: ATOMS" << std::endl;
+          for(auto it = parts.particles.begin(); it != parts.particles.end(); it++)
+            {
+              Particle &p = it->second;
+              
+              output << std::setprecision(17) << it->first << " " << p.type << " " << p.x << " " << p.y << " " << p.z << std::endl;
+            }
+        }
+
       std::vector<int> oldParticles;
       std::set<int> deleted;
       
@@ -280,6 +511,8 @@ int main() {
         {
           oldParticles.push_back(it->first);
         }
+
+      std::random_shuffle(oldParticles.begin(), oldParticles.end());
 
       for(auto it = oldParticles.begin(); it != oldParticles.end(); it++)
         {
@@ -289,20 +522,25 @@ int main() {
 
           int pid = *it;
 
+          //printf("working with particle %d\n", pid);
+
           Particle &p = parts.particles[pid];
 
-          double dx = gaussian(generator) * sqrt(2 * D * dt);
-          double dy = gaussian(generator) * sqrt(2 * D * dt);
-          double dz = gaussian(generator) * sqrt(2 * D * dt);
+          double dx = gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
+          double dy = gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
+          double dz = gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
 
-          double nx = p.x + dx, ny = p.y + dy, nz = p.z + dz;
+          double nx = adjust(p.x + dx, X), ny = adjust(p.y + dy, Y), nz = adjust(p.z + dz, Z);
 
           //vector of ints pointing to other particles
-          auto touching = parts.collide(p.x + dx, p.y + dy, p.z + dz, p.type);
+          auto touching = parts.collide(nx, ny, nz, p.type, pid);
 
           // Reject the situation where three particles meet
-          if(touching.size() > 2 || D == 0.0)
+          if(touching.size() >= 2 || reacs.bam[p.type].D == 0.0)
             {
+              //std::cout << "heyhey" << std::endl;
+              //parts.move(pid, p.x + dx, p.y + dy, p.z + dz);
+              
               continue;
             }
           else if(touching.size() == 0) // If there are no collisions, check if this particle can react in any way
@@ -311,12 +549,12 @@ int main() {
             {
               std::pair<Reactions::mrmT::iterator, Reactions::mrmT::iterator> se = reacs.mrm.equal_range(p.type);
 
-              Reactions::mrmT::iterator it = select<Reactions::mrmT>(se.first, se.second, reacs.mrm.end(), dt, 1.0, uniform(generator), uniform(generator));
+              Reactions::mrmT::iterator it = select<Reactions::mrmT>(se.first, se.second, reacs.mrm.end(), dt, 1.0, uniform, generator);
 
               // If no reactions are found for this particle, accept the move
               if(it == reacs.mrm.end())
                 {
-                  parts.move(it->first, p.x + dx, p.y + dy, p.z + dz);
+                  parts.move(pid, nx, ny, nz);
 
                   continue;
                 }
@@ -343,7 +581,7 @@ int main() {
                       // The newly inserted atom might hit the two atoms we're about to delete
                       //   But if it hits a third, or it hits an atom other than the one we're possibly
                       //     removing, reject
-                      std::cout << touching.size() << std::endl;
+                      //std::cout << touching.size() << std::endl;
                       if(touching.size() >= 1)
                         {
                           if(pid != touching[0] || touching.size() > 1)
@@ -365,12 +603,12 @@ int main() {
                           double theta = pi * uniform(generator);
                           double phi = 2 * pi * uniform(generator);
                   
-                          xx = r * sin(theta) * cos(phi);
-                          yy = r * sin(theta) * sin(phi);
-                          zz = r * cos(theta);
+                          xx = adjust(nx + r * sin(theta) * cos(phi), X);
+                          yy = adjust(ny + r * sin(theta) * sin(phi), Y);
+                          zz = adjust(nz + r * cos(theta), Z);
 
                           //printf("%f %f %f -> %f %f %f, %f\n", x[atomi][0], x[atomi][1], x[atomi][2], xx, yy, zz, r);
-                          auto touching = parts.collide(p.x + xx, p.y + yy, p.z + zz, Ctype);
+                          auto touching = parts.collide(xx, yy, zz, Ctype);
 
                           if(touching.size() >= 1)
                             {
@@ -400,14 +638,18 @@ int main() {
                       // Get rid of the reacted particle
                       deleted.insert(pid);
 
+                      //std::cout << "Monatomic reaction" << pid << std::endl;
                       parts.deleteParticle(pid);
                   
                       // Insert the two products
-                      parts.insertParticle(nx, ny, nz, Btype);
+                      if(Btype > 0)
+                        {
+                          parts.insertParticle(nx, ny, nz, Btype);
+                        }
 
                       if(Ctype > 0)
                         {
-                          parts.insertParticle(nx + xx, ny + yy, nz + zz, Ctype);
+                          parts.insertParticle(xx, yy, zz, Ctype);
                         }
                     }
                 }
@@ -417,15 +659,20 @@ int main() {
               // Remember that findTouching call way above? Let's get the atom id out of that
               int pjd = touching[0];
 
+              //printf("collision\n");
               Particle &p2 = parts.particles[pjd];
 
               // We have an i touching a j, so build the appropriate particle pair
               ParticlePair pp = mpp(p.type, parts.particles[pjd].type);
-          
+
+              //std::cout << "Reacting " << p.type << " " << parts.particles[pjd].type << std::endl;
               // We could either have a regular binary reaction or an enzymatic reaction
               std::pair<Reactions::brmT::iterator, Reactions::brmT::iterator> se = reacs.brm.equal_range(pp);
 
-              Reactions::brmT::iterator it = select<Reactions::brmT>(se.first, se.second, reacs.brm.end(), dt, reacs.paccs[pp], uniform(generator), uniform(generator));
+              //std::cout << std::distance(se.first, se.second) << " options" << std::endl;
+              //std::cout << "getout" << std::endl;
+
+              Reactions::brmT::iterator it = select<Reactions::brmT>(se.first, se.second, reacs.brm.end(), dt, reacs.paccs[pp], uniform, generator);
 
               //if(type[atomi] != type[pjd])
               //  printf("particle %d and %d have collided!\n", type[atomi], type[pjd]);
@@ -469,11 +716,16 @@ int main() {
               deleted.insert(pid);
               deleted.insert(pjd);
 
+              //std::cout << "Binary reaction" << std::endl;
               parts.deleteParticle(pid);
               parts.deleteParticle(pjd);
 
-              parts.insertParticle(nx, ny, nz, Ctype);
+              if(Ctype > 0)
+                {
+                  parts.insertParticle(nx, ny, nz, Ctype);
+                }
             }
         }
     }
+  output.close();
 }

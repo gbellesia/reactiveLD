@@ -1,4 +1,4 @@
-BD_RUN_MODULES := src/ include
+BD_RUN_MODULES := src/ include/
 
 BD_RUN_OBJS := $(call MAKEOBJS, $(BD_RUN_MODULES))
 BD_DEPS := $(call MAKEDEPSINC, $(BD_RUN_OBJS))
