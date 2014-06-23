@@ -12,6 +12,18 @@ Anyway
 
 --
 
+The output format can be used as input to pizza.py (http://pizza.sandia.gov/) which is okay to install on Linux and really difficult to install in Mac os X.
+
+To visualize any output, just do:
+
+pizza.py -f viz.py [outputfile]
+
+Unfortunately, you'll have to set the particle radii manually in viz.py if you use weird radii, but you'll get used to it.
+
+The line 'g.arad([1, 2], [1.0, 2.0])' says plot particles of type 1 with radius 1 and particles of type 2 with radius 2.0
+
+--
+
 The input format is json. I've attached two input files.
 
 There are two ways to specify atoms:

@@ -325,7 +325,7 @@ int main(int argc, char **argv) {
       reacs.bam[type] = BrownianAtom(type, radius, D);
     }
 
-  reacs.init(dt);
+  double maxR = reacs.init(dt);
 
   if(reacs.bam.size() < 1)
     {
@@ -334,7 +334,7 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-  Particles parts(100, 100, 100, X, Y, Z, reacs);
+  Particles parts(maxR, X, Y, Z, reacs);
 
   if(atomsArray != NULL)
     {

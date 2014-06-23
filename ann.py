@@ -29,6 +29,6 @@ for line in h.readlines():
         
 h.close()
 
-matplotlib.pyplot.plot(counts)
+matplotlib.pyplot.semilogy(counts)
 matplotlib.pyplot.show()
 

@@ -269,8 +269,10 @@ public:
   mrmT mrm; // Monatomic reaction map - MRM!
 
   // Call this after the types and reactions have all been filled out
-  void init(double dt)
+  double init(double dt)
   {
+    double maxR = 0.0;
+
     std::cout << "Brownian Atom types" << std::endl;
     for(bamT::iterator it = bam.begin(); it != bam.end(); it++)
       {
@@ -301,6 +303,8 @@ public:
           double D = it->second.D + it2->second.D,
             R = it->second.radius + it2->second.radius;
 
+          maxR = std::max(R, maxR);
+
           if(D < 1e-17)
             {
               printf("WARNING D < 1e-17 in Psepr evaluations of particle types %d and %d. This is possibly okay if they are immobile.\n", it->first, it2->first);
@@ -318,6 +322,8 @@ public:
 
       paccs[mpp(it->first, -1)] = 1.0;
     }
+    
+    return maxR;
   }
 };
 

@@ -44,8 +44,12 @@ public:
     return (x % Nx) * Ny * Nz + (y % Ny) * Nz + (z % Nz);
   }
 
-  Particles(int Nx, int Ny, int Nz, double X, double Y, double Z, Reactions &reacs) : Nx(Nx), Ny(Ny), Nz(Nz), X(X), Y(Y), Z(Z), reacs(reacs)
+  Particles(double maxR, double X, double Y, double Z, Reactions &reacs) : X(X), Y(Y), Z(Z), reacs(reacs)
   {
+    Nx = int(X / maxR) + 1;
+    Ny = int(Y / maxR) + 1;
+    Nz = int(Z / maxR) + 1;
+
     dX = X / Nx;
     dY = Y / Ny;
     dZ = Z / Nz;
