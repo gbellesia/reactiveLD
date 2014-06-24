@@ -572,6 +572,7 @@ int main(int argc, char **argv) {
                   int tries = 0;
 
                   double xx, yy, zz;
+                  bool initialized = false; // This is just for sanity's sake. It's possible we used xx, yy, and zz unitialized. Let's make sure this doesn't happend
 
                   for(tries = 0; tries < maxTries; tries++)
                     {
@@ -603,6 +604,7 @@ int main(int argc, char **argv) {
                           double theta = pi * uniform(generator);
                           double phi = 2 * pi * uniform(generator);
                   
+                          initialized = true; // We initialized xx, yy, zz
                           xx = adjust(nx + r * sin(theta) * cos(phi), X);
                           yy = adjust(ny + r * sin(theta) * sin(phi), Y);
                           zz = adjust(nz + r * cos(theta), Z);
@@ -649,6 +651,12 @@ int main(int argc, char **argv) {
 
                       if(Ctype > 0)
                         {
+                          if(initialized == false)
+                            {
+                              std::cout << "xx, yy, and zz are not initialized!" << std::endl;
+                              exit(-1);
+                            }
+
                           parts.insertParticle(xx, yy, zz, Ctype);
                         }
                     }
