@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <vector>
 #include <random>
-#include "functions.h"
 #include <string.h>
 #include <sstream>
 #include <random>
