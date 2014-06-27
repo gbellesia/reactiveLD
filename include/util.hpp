@@ -140,6 +140,9 @@ void align_allocate(T **ptr, void **memory, size_t count)
 template <class T>
 inline T cyclicDistance(T n1, T n2, T N)
 {
+  n1 = adjust(n1, N);
+  n2 = adjust(n2, N);
+
   /*if(std::abs(n2 - n1) > N / 2)
     {
       return std::abs(N - std::(

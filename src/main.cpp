@@ -530,7 +530,7 @@ int main(int argc, char **argv) {
           double dy = gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
           double dz = gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
 
-          double nx = adjust(p.x + dx, X), ny = adjust(p.y + dy, Y), nz = adjust(p.z + dz, Z);
+          double nx = p.x + dx, ny = p.y + dy, nz = p.z + dz;
 
           //vector of ints pointing to other particles
           auto touching = parts.collide(nx, ny, nz, p.type, pid);
@@ -605,9 +605,9 @@ int main(int argc, char **argv) {
                           double phi = 2 * pi * uniform(generator);
                   
                           initialized = true; // We initialized xx, yy, zz
-                          xx = adjust(nx + r * sin(theta) * cos(phi), X);
-                          yy = adjust(ny + r * sin(theta) * sin(phi), Y);
-                          zz = adjust(nz + r * cos(theta), Z);
+                          xx = nx + r * sin(theta) * cos(phi);
+                          yy = ny + r * sin(theta) * sin(phi);
+                          zz = nz + r * cos(theta);
 
                           //printf("%f %f %f -> %f %f %f, %f\n", x[atomi][0], x[atomi][1], x[atomi][2], xx, yy, zz, r);
                           auto touching = parts.collide(xx, yy, zz, Ctype);
