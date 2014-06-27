@@ -36,6 +36,7 @@ for i in range(0, 30000):
     config = { "X" : 10000,
                "Y" : 10000,
                "Z" : 10000,
+	       "simType" : "", #periodicBox, boxWithWalls, spherical
                "dt" : 1.0,
                "steps" : 2,
                "printSteps" : 1,
