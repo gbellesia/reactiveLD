@@ -83,6 +83,41 @@ int main(int argc, char **argv) {
   json_t *dtj = json_object_get(root, "dt");
   json_t *bArray = json_object_get(root, "binary");
   json_t *aTypes = json_object_get(root, "types");
+  json_t *type = json_object_get(root, "simType");
+
+  bool spherical = false;
+  bool periodic = true;
+
+  if(type == NULL || !json_is_string(type))
+    {
+    }
+  else
+    {
+      if(strcmp(json_string_value(type), "spherical") == 0)
+        {
+          spherical = true;
+          periodic = false;
+        }
+      else if(strcmp(json_string_value(type), "boxWithWalls") == 0)
+        {
+          spherical = false;
+          periodic = false;
+        }
+      else if(strcmp(json_string_value(type), "periodicBox") == 0)
+        {
+          spherical = false;
+          periodic = true;
+        }
+      else
+        {
+          std::cout << "simType must be defined as either \"spherical\", \"boxWithWalls\", or \"periodicBox\"" << std::endl;
+      
+          if(Xj != NULL)
+            json_decref(root);
+      
+          return 1;
+        }
+    }
 
   if(Xj == NULL || !json_is_number(Xj))
     {
@@ -334,7 +369,7 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-  Particles parts(maxR, X, Y, Z, reacs);
+  Particles parts(maxR, X, Y, Z, spherical, periodic, reacs);
 
   if(atomsArray != NULL)
     {
@@ -664,6 +699,12 @@ int main(int argc, char **argv) {
             }
           else // Handle binary reactions
             {
+              // If we're touching the wall, reject
+              if(touching[0] == -1)
+                {
+                  continue;
+                }
+
               // Remember that findTouching call way above? Let's get the atom id out of that
               int pjd = touching[0];
 

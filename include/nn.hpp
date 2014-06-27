@@ -24,6 +24,8 @@ public:
 
   double dX, dY, dZ;
 
+  bool spherical, periodic;
+
   Reactions &reacs;
 
   typedef std::vector<int> indexListT;
@@ -44,7 +46,7 @@ public:
     return (x % Nx) * Ny * Nz + (y % Ny) * Nz + (z % Nz);
   }
 
-  Particles(double maxR, double X, double Y, double Z, Reactions &reacs) : X(X), Y(Y), Z(Z), reacs(reacs)
+  Particles(double maxR, double X, double Y, double Z, bool spherical, bool periodic, Reactions &reacs) : X(X), Y(Y), Z(Z), spherical(spherical), periodic(periodic), reacs(reacs)
   {
     Nx = int(X / maxR) + 1;
     Ny = int(Y / maxR) + 1;
@@ -104,6 +106,30 @@ public:
   // Return a list of all particles that collide with this atom 
   indexListT collide(double x, double y, double z, int type, int id = -1)
   {
+    double xx, yy, zz;
+
+    double radius = reacs.bam[type].radius;
+
+    xx = std::abs(adjust(x, X) - X / 2.0) + radius;
+    yy = std::abs(adjust(y, Y) - X / 2.0) + radius;
+    zz = std::abs(adjust(z, Z) - X / 2.0) + radius;
+
+    if(!periodic)
+      {
+        if((x - radius) < 0 || (x + radius) > X || (y - radius) < 0 || (y + radius) > Y || (z - radius) < 0 || (z + radius) > Z)
+          {
+            return indexListT({ -1 });
+          }
+      }
+    
+    if(spherical)
+      {
+        if((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y) + 4 * zz * zz / (Z * Z)) >= 1.0)
+          {
+            return indexListT({ -1 });
+          }
+      }
+
     // We use a 3x3x3 collision grid
     // This requires each bin to be 1x times the size of the largest particle
 
@@ -138,9 +164,20 @@ public:
 
                     Particle pj = particles[*it];
 
-                    double dx = cyclicDistance(pj.x, x, X),
-                      dy = cyclicDistance(pj.y, y, Y),
-                      dz = cyclicDistance(pj.z, z, Z);
+                    double dx, dy, dz;
+
+                    /*if(periodic)
+                      {*/
+                        dx = cyclicDistance(pj.x, x, X);
+                        dy = cyclicDistance(pj.y, y, Y);
+                        dz = cyclicDistance(pj.z, z, Z);
+                        /*}
+                    else
+                      {
+                        dx = std::abs(pj.x - x);
+                        dy = std::abs(pj.y - y);
+                        dz = std::abs(pj.z - z);
+                        }*/
 
                     double rsq = dx * dx + dy * dy + dz * dz;
   

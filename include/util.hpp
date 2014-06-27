@@ -152,7 +152,9 @@ inline T cyclicDistance(T n1, T n2, T N)
       return std::abs(n2 - n1);
       }*/
 
-  if(n2 > n1)
+  return std::min(std::abs(n1 - n2), N - std::abs(n1 - n2));
+
+  /*if(n2 > n1)
     {
       if(n2 - n1 < (N - n2 + n1))
 	{
@@ -173,7 +175,7 @@ inline T cyclicDistance(T n1, T n2, T N)
 	{
 	  return -(N - n1 + n2);
 	}
-    }
+        }*/
   //return std::min(std::min(std::abs(n2 - n1), std::abs((N - n1) + (n2 - 0))), std::abs((N - n2) + (n1 - 0)));
 }
 
