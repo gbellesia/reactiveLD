@@ -41,13 +41,13 @@ for total in totals:
                "types" : [{ "type" : 1, "radius" : 1.0, "D" : 0.5 },
                           { "type" : 2, "radius" : 1.0, "D" : 0.5 }]}
 
-    [infdid, inData] = tempfile.mkstemp(dir = "/home/bbales2/ram")
+    [infdid, inData] = tempfile.mkstemp(dir = ".")
     
     h = os.fdopen(infdid, "w")
     h.write(json.dumps(config))
     h.close()
 
-    [outfdid, outData] = tempfile.mkstemp(dir = "/home/bbales2/ram")
+    [outfdid, outData] = tempfile.mkstemp(dir = ".")
     os.close(outfdid)
     #print outData
     

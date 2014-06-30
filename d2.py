@@ -12,8 +12,8 @@ import random
 import matplotlib.pyplot
 import scipy.stats
 
-totals = [512]
-rho = 0.009
+totals = [1000]
+rho = 0.1
 X = (8.0 * totals[0] / rho)**(1.0/3.0) # from normalized density = (2r)^3 * N / V 
 
 repeats = 1
@@ -27,14 +27,15 @@ pool = Pool(4)
 
 out = []
 
-dt = 0.1
+dt = 1.0
 for total in totals:
     #distsSq = []
     config = { "X" : X,
                "Y" : X,
-               "Z" : X,
-               "dt" : dt,
-               "steps" : 500,
+               "Z" : 2*X,
+               "simType" : "spherical",
+	       "dt" : dt,
+               "steps" : 20,
                "printSteps" : 1,
                "monatomic" : [],
                "binary" : [],
@@ -51,7 +52,7 @@ for total in totals:
 
     [outfdid, outData] = tempfile.mkstemp(dir = ".")
     os.close(outfdid)
-    #print outData
+    print outData
     
     h = subprocess.Popen(shlex.split("./bd_run {0} {1} {2}".format(inData, outData, int(random.random() * 1000000000))), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     stdout, stderr = h.communicate()
@@ -89,7 +90,7 @@ for total in totals:
 
     dists = {}
 
-    os.remove(outData)
+    #os.remove(outData)
 
     for atomid in pos:
         steps = len(pos[atomid])

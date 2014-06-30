@@ -21,9 +21,9 @@ outputfile = sys.argv[1]
 
 distances = []
 
-for i in range(0, 1000):
-    if os.path.isdir("/home/bbales2/ram"):
-        tmpdir = "/home/bbales2/ram"
+for i in range(0, 30000):
+    if os.path.isdir("./"):
+        tmpdir = "./"
     else:
         tmpdir = "/tmp"
 
@@ -36,9 +36,9 @@ for i in range(0, 1000):
     config = { "X" : 10000,
                "Y" : 10000,
                "Z" : 10000,
-               "dt" : 0.01,
-               "steps" : 2001,
-               "printSteps" : 2000,
+               "dt" : 1.0,
+               "steps" : 2,
+               "printSteps" : 1,
                "monatomic" : [],
                "binary" : [{ "A" : 1, "B" : 1, "k" : 2.010619298 }],
                "atoms" : [{"x" : 5000,

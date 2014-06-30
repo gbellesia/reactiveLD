@@ -111,8 +111,8 @@ public:
     double radius = reacs.bam[type].radius;
 
     xx = std::abs(adjust(x, X) - X / 2.0) + radius;
-    yy = std::abs(adjust(y, Y) - X / 2.0) + radius;
-    zz = std::abs(adjust(z, Z) - X / 2.0) + radius;
+    yy = std::abs(adjust(y, Y) - Y / 2.0) + radius;
+    zz = std::abs(adjust(z, Z) - Z / 2.0) + radius;
 
     if(!periodic)
       {
