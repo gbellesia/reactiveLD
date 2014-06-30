@@ -269,7 +269,7 @@ int main(int argc, char **argv) {
         }
 
       json_t *Bj = json_object_get(r, "B");
-      if(Bj == NULL || !json_is_integer(Bj))
+      if(Bj != NULL && !json_is_integer(Bj))
         {
           std::cout << "Found a non-number identifier for B-atoms" << std::endl;
 
@@ -299,9 +299,9 @@ int main(int argc, char **argv) {
           return 1;
         }
 
-      int C = json_integer_value(Cj);
-      int B = (Bj == NULL) ? -1 : json_integer_value(Bj);
       int A = json_integer_value(Aj);
+      int B = (Bj == NULL) ? -1 : json_integer_value(Bj);
+      int C = (Cj == NULL) ? -1 : json_integer_value(Cj);
      
       double k = json_number_value(kj);
 
