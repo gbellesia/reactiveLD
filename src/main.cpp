@@ -227,6 +227,16 @@ int main(int argc, char **argv) {
           return 1;
         }
 
+      json_t *Dj = json_object_get(r, "D");
+      if(Dj != NULL && !json_is_integer(Dj))
+        {
+          std::cout << "Found a non-number identifier for (D) atoms" << std::endl;
+
+          json_decref(root);
+
+          return 1;
+        }
+
       json_t *kj = json_object_get(r, "k");
       if(kj == NULL || !json_is_number(kj))
         {
@@ -238,13 +248,14 @@ int main(int argc, char **argv) {
           return 1;
         }
 
+      int D = (Dj == NULL) ? -1 : json_integer_value(Dj);
       int C = (Cj == NULL) ? -1 : json_integer_value(Cj);
       int B = json_integer_value(Bj);
       int A = json_integer_value(Aj);
      
       double k = json_number_value(kj);
 
-      reacs.brm.insert(Reactions::brmT::value_type(mpp(A, B), BinaryReaction(A, B, C, k)));
+      reacs.brm.insert(Reactions::brmT::value_type(mpp(A, B), BinaryReaction(A, B, C, D, k)));
     }
 
   for(int i = 0; i < (int)json_array_size(mArray); i++)
@@ -258,12 +269,11 @@ int main(int argc, char **argv) {
         }
 
       json_t *Aj = json_object_get(r, "A");
-      if(Aj == NULL || !json_is_integer(Aj))
+      if(Aj != NULL && !json_is_integer(Aj))
         {
           std::cout << "Found a non-number identifier for (A) atoms" << std::endl;
 
-          if(Aj != NULL)
-            json_decref(root);
+          json_decref(root);
 
           return 1;
         }
@@ -299,7 +309,7 @@ int main(int argc, char **argv) {
           return 1;
         }
 
-      int A = json_integer_value(Aj);
+      int A = (Aj == NULL) ? -1 : json_integer_value(Aj);
       int B = (Bj == NULL) ? -1 : json_integer_value(Bj);
       int C = (Cj == NULL) ? -1 : json_integer_value(Cj);
      
@@ -550,6 +560,111 @@ int main(int argc, char **argv) {
 
       std::random_shuffle(oldParticles.begin(), oldParticles.end());
 
+      //Handle creation reactions
+      std::pair<Reactions::mrmT::iterator, Reactions::mrmT::iterator> se = reacs.mrm.equal_range(-1);
+
+      Reactions::mrmT::iterator it = select<Reactions::mrmT>(se.first, se.second, reacs.mrm.end(), dt, 1.0, uniform, generator);
+
+      // If reaction found, try to make it happen!
+      if(it != reacs.mrm.end())
+        {
+          MonatomicReaction reaction = it->second;
+
+          //std::cout << reaction.str() << std::endl;
+
+          int Btype = reaction.B,
+            Ctype = reaction.C;
+
+          //If there is no Btype, better be no Ctype. This is a destruction reac!
+          if(Btype > 0)
+            {
+              int tries = 0;
+
+              double xx, yy, zz, nx, ny, nz;
+              bool initialized = false; // This is just for sanity's sake. It's possible we used xx, yy, and zz unitialized. Let's make sure this doesn't happend
+
+              for(tries = 0; tries < maxTries; tries++)
+                {
+                  nx = X * uniform(generator);
+                  ny = Y * uniform(generator);
+                  nz = Z * uniform(generator);
+
+                  //Check if it will be possible to insert a B atom
+                  auto touching = parts.collide(nx, ny, nz, Btype);
+
+                  // The newly inserted atom might hit the two atoms we're about to delete
+                  //   But if it hits a third, or it hits an atom other than the one we're possibly
+                  //     removing, reject
+                  //std::cout << touching.size() << std::endl;
+                  if(touching.size() >= 1)
+                    {
+                      if(debug)
+                        printf("Failed to insert new atom, atom still moved \n");
+                      
+                      continue;
+                    }
+          
+                  //Check if it will be possible to insert a C atom
+                  if(Ctype > 0)
+                    {
+                      double r = reacs.pseps[mpp(Btype, Ctype)].sample(uniform(generator));
+
+                      //std::cout << r << std::endl;
+                  
+                      double theta = pi * uniform(generator);
+                      double phi = 2 * pi * uniform(generator);
+                  
+                      initialized = true; // We initialized xx, yy, zz
+                      xx = nx + r * sin(theta) * cos(phi);
+                      yy = ny + r * sin(theta) * sin(phi);
+                      zz = nz + r * cos(theta);
+
+                      //printf("%f %f %f -> %f %f %f, %f\n", x[atomi][0], x[atomi][1], x[atomi][2], xx, yy, zz, r);
+                      auto touching = parts.collide(xx, yy, zz, Ctype);
+
+                      if(touching.size() >= 1)
+                        {
+                          if(debug)
+                            printf("Failed to insert new atom, atom still moved \n");
+                          
+                          continue;
+                        }
+                    }
+
+                  // If we got this far, any necessary reaction products have been successfully inserted
+                  break;
+                }
+
+              // If we failed to insert the new atoms, reject the move and go on
+              if(tries == maxTries)
+                {
+                  //std::cout << "reject" << std::endl;
+              
+                  continue;
+                }
+              else
+                {
+                  // Insert the two products
+                  if(Btype > 0)
+                    {
+                      parts.insertParticle(nx, ny, nz, Btype);
+                    }
+
+                  if(Ctype > 0)
+                    {
+                      if(initialized == false)
+                        {
+                          std::cout << "xx, yy, and zz are not initialized!" << std::endl;
+                          exit(-1);
+                        }
+
+                      parts.insertParticle(xx, yy, zz, Ctype);
+                    }
+                }
+            }
+        }
+
+
       for(auto it = oldParticles.begin(); it != oldParticles.end(); it++)
         {
           // Don't try to work with an atom that has already been deleted
@@ -742,8 +857,105 @@ int main(int argc, char **argv) {
               double nx = p2.x, ny = p2.y, nz = p2.z;
 
               int Ctype = reaction.C;
-
+              int Dtype = reaction.D;
+              //If there is no Ctype, better be no Dtype. This is a destruction reac!
               if(Ctype > 0)
+                {
+                  int tries = 0;
+
+                  double xx, yy, zz;
+                  bool initialized = false; // This is just for sanity's sake. It's possible we used xx, yy, and zz unitialized. Let's make sure this doesn't happend
+
+                  for(tries = 0; tries < maxTries; tries++)
+                    {
+                      //Check if it will be possible to insert a C atom
+                      auto touching = parts.collide(nx, ny, nz, Ctype);
+
+                      // The newly inserted atom might hit the two atoms we're about to delete
+                      //   But if it hits a third, or it hits an atom other than the one we're possibly
+                      //     removing, reject
+                      //std::cout << touching.size() << std::endl;
+          
+                      std::set<int> tmp = { pid, pjd };
+                      if(touching.size() > 2 ||
+                         !std::includes(tmp.begin(), tmp.end(), touching.begin(), touching.end()))
+                        {
+                          if(debug)
+                            printf("Failed to insert new atom, atom still moved \n");
+              
+                          continue;
+                        }
+          
+                      //Check if it will be possible to insert a D atom
+                      if(Dtype > 0)
+                        {
+                          double r = reacs.pseps[mpp(Ctype, Dtype)].sample(uniform(generator));
+
+                          //std::cout << r << std::endl;
+                  
+                          double theta = pi * uniform(generator);
+                          double phi = 2 * pi * uniform(generator);
+                  
+                          initialized = true; // We initialized xx, yy, zz
+                          xx = nx + r * sin(theta) * cos(phi);
+                          yy = ny + r * sin(theta) * sin(phi);
+                          zz = nz + r * cos(theta);
+
+                          //printf("%f %f %f -> %f %f %f, %f\n", x[atomi][0], x[atomi][1], x[atomi][2], xx, yy, zz, r);
+                          auto touching = parts.collide(xx, yy, zz, Dtype);
+
+                          std::set<int> tmp = { pid, pjd };
+                          if(touching.size() > 2 ||
+                             !std::includes(tmp.begin(), tmp.end(), touching.begin(), touching.end()))
+                            {
+                              if(debug)
+                                printf("Failed to insert new atom, atom still moved \n");
+                              
+                              continue;
+                            }
+                        }
+
+                      // If we got this far, any necessary reaction products have been successfully inserted
+                      break;
+                    }
+
+                  // If we failed to insert the new atoms, reject the move and go on
+                  if(tries == maxTries)
+                    {
+                      continue;
+                    }
+                  else
+                    { 
+                      // Get rid of the reacted particle
+                      deleted.insert(pid);
+                      deleted.insert(pjd);
+
+                      //std::cout << "Monatomic reaction" << pid << std::endl;
+                      parts.deleteParticle(pid);
+                      parts.deleteParticle(pjd);
+                  
+                      // Insert the two products
+                      if(Ctype > 0)
+                        {
+                          parts.insertParticle(nx, ny, nz, Ctype);
+
+                          if(Dtype > 0)
+                            {
+                              if(initialized == false)
+                                {
+                                  std::cout << "xx, yy, and zz are not initialized!" << std::endl;
+                                  exit(-1);
+                                }
+                              else
+                                {
+                                  parts.insertParticle(xx, yy, zz, Dtype);
+                                }
+                            }
+                        }
+                    }
+                }
+
+              /*if(Ctype > 0)
                 {
                   //Check if it will be possible to insert a C atom
                   auto touching = parts.collide(nx, ny, nz, Ctype);
@@ -757,23 +969,11 @@ int main(int argc, char **argv) {
               
                       continue;
                     }
-                }
+                    }*/
           
               // Time to delete the reactants
-              if(debug)
-                printf("Trying to delete\n");
-
-              deleted.insert(pid);
-              deleted.insert(pjd);
-
-              //std::cout << "Binary reaction" << std::endl;
-              parts.deleteParticle(pid);
-              parts.deleteParticle(pjd);
-
-              if(Ctype > 0)
-                {
-                  parts.insertParticle(nx, ny, nz, Ctype);
-                }
+              //if(debug)
+              //  printf("Trying to delete\n");
             }
         }
     }

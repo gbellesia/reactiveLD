@@ -186,18 +186,18 @@ public:
 // A + E -> B + C + E // Not implemented and I won't implement it without a reason :D:D:D:D:D
 class BinaryReaction {
 public:
-  int A, B, C;
+  int A, B, C, D;
   double k;
   bool enzymatic;
 
   BinaryReaction() {};
-  BinaryReaction(int A, int B, int C, double k, bool enzymatic = false) : A(A), B(B), C(C), k(k), enzymatic(enzymatic) {};
+  BinaryReaction(int A, int B, int C, int D, double k, bool enzymatic = false) : A(A), B(B), C(C), D(D), k(k), enzymatic(enzymatic) {};
 
   std::string str()
   {
     std::stringstream out;
 
-    out << "Binary reac. A: " << A << ", B: " << B << ", C: " << C << ", rate: " << k << ", enzymatic: " << (enzymatic ? "true" : "false");
+    out << "Binary reac. A: " << A << ", B: " << B << ", C: " << C << ", D: " << D << ", rate: " << k << ", enzymatic: " << (enzymatic ? "true" : "false");
 
     return out.str();
   }
