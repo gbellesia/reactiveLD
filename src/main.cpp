@@ -717,13 +717,13 @@ int main(int argc, char **argv) {
               int Btype = reaction.B,
                 Ctype = reaction.C;
 
+              double xx, yy, zz;
+              bool initialized = false; // This is just for sanity's sake. It's possible we used xx, yy, and zz unitialized. Let's make sure this doesn't happend
+
               //If there is no Btype, better be no Ctype. This is a destruction reac!
               if(Btype > 0)
                 {
                   int tries = 0;
-
-                  double xx, yy, zz;
-                  bool initialized = false; // This is just for sanity's sake. It's possible we used xx, yy, and zz unitialized. Let's make sure this doesn't happend
 
                   for(tries = 0; tries < maxTries; tries++)
                     {
@@ -786,31 +786,29 @@ int main(int argc, char **argv) {
               
                       continue;
                     }
-                  else
-                    {                      
-                      // Get rid of the reacted particle
-                      deleted.insert(pid);
+                }
+              
+              // Get rid of the reacted particle
+              deleted.insert(pid);
 
-                      //std::cout << "Monatomic reaction" << pid << std::endl;
-                      parts.deleteParticle(pid);
+              //std::cout << "Monatomic reaction" << pid << std::endl;
+              parts.deleteParticle(pid);
                   
-                      // Insert the two products
-                      if(Btype > 0)
-                        {
-                          parts.insertParticle(nx, ny, nz, Btype);
-                        }
-
-                      if(Ctype > 0)
-                        {
-                          if(initialized == false)
-                            {
-                              std::cout << "xx, yy, and zz are not initialized!" << std::endl;
-                              exit(-1);
-                            }
-
-                          parts.insertParticle(xx, yy, zz, Ctype);
-                        }
+              // Insert the two products
+              if(Btype > 0)
+                {
+                  parts.insertParticle(nx, ny, nz, Btype);
+                }
+              
+              if(Ctype > 0)
+                {
+                  if(initialized == false)
+                    {
+                      std::cout << "xx, yy, and zz are not initialized!" << std::endl;
+                      exit(-1);
                     }
+                  
+                  parts.insertParticle(xx, yy, zz, Ctype);
                 }
             }
           else // Handle binary reactions
