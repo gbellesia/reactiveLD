@@ -166,18 +166,18 @@ public:
 
                     double dx, dy, dz;
 
-                    /*if(periodic)
-                      {*/
+                    if(periodic)
+                      {
                         dx = cyclicDistance(pj.x, x, X);
                         dy = cyclicDistance(pj.y, y, Y);
                         dz = cyclicDistance(pj.z, z, Z);
-                        /*}
+                        }
                     else
                       {
                         dx = std::abs(pj.x - x);
                         dy = std::abs(pj.y - y);
                         dz = std::abs(pj.z - z);
-                        }*/
+                      }
 
                     double rsq = dx * dx + dy * dy + dz * dz;
   

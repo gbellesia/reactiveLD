@@ -920,6 +920,8 @@ int main(int argc, char **argv) {
                   // If we failed to insert the new atoms, reject the move and go on
                   if(tries == maxTries)
                     {
+                      //std::cout << "things aren't fitting" << std::endl;
+
                       continue;
                     }
                   else

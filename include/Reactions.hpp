@@ -24,6 +24,8 @@ typename T::iterator select(typename T::iterator it1, typename T::iterator it2, 
       double r = uniform(generator);
       bool fire = r < it->second.k * dt * pacc;
 
+      //printf("A %d B %d r = %f, %f, %f\n", it->second.A, it->second.B, r, it->second.k * dt * pacc, pacc);
+
       // If the reaction doesn't fire, accept the move and we're done
       if(!fire)
         {
