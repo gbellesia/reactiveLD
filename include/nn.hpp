@@ -64,12 +64,12 @@ public:
   {
     indexListT otherParticles = collide(x, y, z, type, id);
 
-    if(otherParticles.size() > 0)
+    /*if(otherParticles.size() > 0)
       {
         std::cout << "Failed to insert new particle. Check collisions first" << std::endl;
 
         exit(-1);
-      }
+        }*/
 
     if(id == -1)
       {

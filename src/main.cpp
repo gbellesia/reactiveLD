@@ -528,25 +528,25 @@ int main(int argc, char **argv) {
       //  output << "wtf has happened?\n" << std::endl;
       if(s % printSteps == 0)
         {
-          //output << "ITEM: TIMESTEP" << std::endl;
-          //output << s << std::endl;
+          output << "ITEM: TIMESTEP" << std::endl;
+          output << s << std::endl;
 
-          //output << "ITEM: NUMBER OF ATOMS" << std::endl;
+          output << "ITEM: NUMBER OF ATOMS" << std::endl;
           output << parts.particles.size() << std::endl;
-          output << "go spurs" << std::endl;
+          //output << "go spurs" << std::endl;
 
-          //output << "ITEM: BOX BOUNDS" << std::endl;
-          //output << 0.0 << " " << X << std::endl;
-          //output << 0.0 << " " << Y << std::endl;
-          //output << 0.0 << " " << Z << std::endl;
+          output << "ITEM: BOX BOUNDS" << std::endl;
+          output << 0.0 << " " << X << std::endl;
+          output << 0.0 << " " << Y << std::endl;
+          output << 0.0 << " " << Z << std::endl;
           
-          //output << "ITEM: ATOMS" << std::endl;
+          output << "ITEM: ATOMS" << std::endl;
           for(auto it = parts.particles.begin(); it != parts.particles.end(); it++)
             {
               Particle &p = it->second;
               
-              //output << std::setprecision(17) << it->first << " " << p.type << " " << p.x << " " << p.y << " " << p.z << std::endl;
-              output << std::setprecision(17) << p.type << " " << p.x << " " << p.y << " " << p.z << std::endl;
+              output << std::setprecision(17) << it->first << " " << p.type << " " << p.x << " " << p.y << " " << p.z << std::endl;
+              //output << std::setprecision(17) << p.type << " " << p.x << " " << p.y << " " << p.z << std::endl;
             }
         }
 
@@ -596,13 +596,13 @@ int main(int argc, char **argv) {
                   //   But if it hits a third, or it hits an atom other than the one we're possibly
                   //     removing, reject
                   //std::cout << touching.size() << std::endl;
-                  if(touching.size() >= 1)
+                  /*if(touching.size() >= 1)
                     {
                       if(debug)
                         printf("Failed to insert new atom, atom still moved \n");
                       
                       continue;
-                    }
+                      }*/
           
                   //Check if it will be possible to insert a C atom
                   if(Ctype > 0)
@@ -622,13 +622,13 @@ int main(int argc, char **argv) {
                       //printf("%f %f %f -> %f %f %f, %f\n", x[atomi][0], x[atomi][1], x[atomi][2], xx, yy, zz, r);
                       auto touching = parts.collide(xx, yy, zz, Ctype);
 
-                      if(touching.size() >= 1)
+                      /*if(touching.size() >= 1)
                         {
                           if(debug)
                             printf("Failed to insert new atom, atom still moved \n");
                           
                           continue;
-                        }
+                          }*/
                     }
 
                   // If we got this far, any necessary reaction products have been successfully inserted
@@ -690,7 +690,7 @@ int main(int argc, char **argv) {
           if(touching.size() >= 2 || reacs.bam[p.type].D == 0.0)
             {
               //std::cout << "heyhey" << std::endl;
-              //parts.move(pid, p.x + dx, p.y + dy, p.z + dz);
+              parts.move(pid, p.x + dx, p.y + dy, p.z + dz);
               
               continue;
             }
@@ -734,7 +734,7 @@ int main(int argc, char **argv) {
                       //   But if it hits a third, or it hits an atom other than the one we're possibly
                       //     removing, reject
                       //std::cout << touching.size() << std::endl;
-                      if(touching.size() >= 1)
+                      /*if(touching.size() >= 1)
                         {
                           if(pid != touching[0] || touching.size() > 1)
                             {
@@ -743,7 +743,7 @@ int main(int argc, char **argv) {
               
                               continue;
                             }
-                        }
+                            }*/
           
                       //Check if it will be possible to insert a C atom
                       if(Ctype > 0)
@@ -763,7 +763,7 @@ int main(int argc, char **argv) {
                           //printf("%f %f %f -> %f %f %f, %f\n", x[atomi][0], x[atomi][1], x[atomi][2], xx, yy, zz, r);
                           auto touching = parts.collide(xx, yy, zz, Ctype);
 
-                          if(touching.size() >= 1)
+                          /*if(touching.size() >= 1)
                             {
                               if(pid != touching[0] || touching.size() > 1)
                                 {
@@ -772,7 +772,7 @@ int main(int argc, char **argv) {
                       
                                   continue;
                                 }
-                            }
+                                }*/
                         }
 
                       // If we got this far, any necessary reaction products have been successfully inserted
@@ -843,6 +843,7 @@ int main(int argc, char **argv) {
               // If no reactions are found for this particle, reject the move, and end
               if(it == reacs.brm.end())
                 {
+                  parts.move(pid, p.x + dx, p.y + dy, p.z + dz);
                   //if(type[atomi] != type[pjd])
                   //printf("No reaction found!\n");
               
@@ -874,7 +875,7 @@ int main(int argc, char **argv) {
                       //     removing, reject
                       //std::cout << touching.size() << std::endl;
           
-                      std::set<int> tmp = { pid, pjd };
+                      /*std::set<int> tmp = { pid, pjd };
                       if(touching.size() > 2 ||
                          !std::includes(tmp.begin(), tmp.end(), touching.begin(), touching.end()))
                         {
@@ -882,7 +883,8 @@ int main(int argc, char **argv) {
                             printf("Failed to insert new atom, atom still moved \n");
               
                           continue;
-                        }
+                          }
+*/
           
                       //Check if it will be possible to insert a D atom
                       if(Dtype > 0)
@@ -901,7 +903,7 @@ int main(int argc, char **argv) {
 
                           //printf("%f %f %f -> %f %f %f, %f\n", x[atomi][0], x[atomi][1], x[atomi][2], xx, yy, zz, r);
                           auto touching = parts.collide(xx, yy, zz, Dtype);
-
+                          /*
                           std::set<int> tmp = { pid, pjd };
                           if(touching.size() > 2 ||
                              !std::includes(tmp.begin(), tmp.end(), touching.begin(), touching.end()))
@@ -910,7 +912,7 @@ int main(int argc, char **argv) {
                                 printf("Failed to insert new atom, atom still moved \n");
                               
                               continue;
-                            }
+                              }*/
                         }
 
                       // If we got this far, any necessary reaction products have been successfully inserted
