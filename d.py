@@ -51,7 +51,7 @@ for total in totals:
     os.close(outfdid)
     #print outData
     
-    h = subprocess.Popen(shlex.split("./bd_run {0} {1} {2}".format(inData, outData, int(random.random() * 1000000000))), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    h = subprocess.Popen(shlex.split("./bd_run {0} {1} {2} pizza".format(inData, outData, int(random.random() * 1000000000))), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     stdout, stderr = h.communicate()
     
         #print stdout, stderr
