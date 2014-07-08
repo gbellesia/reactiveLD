@@ -39,6 +39,16 @@ int main(int argc, char **argv) {
       std::cout << "Not enough arguments. Input format is: ./bd_run [infile] [outfile] [randomseed]" << std::endl;
     }
 
+  std::string outputType;
+  if(argc == 5)
+    {
+      outputType = std::string(argv[4]);
+    }
+  else
+    {
+      outputType = "xyzwhatever";
+    }
+
   std::string inFileName(argv[1]), outFileName(argv[2]);
 
   std::mt19937 generator(atoi(argv[3]));
@@ -528,25 +538,35 @@ int main(int argc, char **argv) {
       //  output << "wtf has happened?\n" << std::endl;
       if(s % printSteps == 0)
         {
-          //output << "ITEM: TIMESTEP" << std::endl;
-          //output << s << std::endl;
+          if(outputType.compare("pizza") == 0)
+            {
+              output << "ITEM: TIMESTEP" << std::endl;
+              output << s << std::endl;
 
-          //output << "ITEM: NUMBER OF ATOMS" << std::endl;
-          output << parts.particles.size() << std::endl;
-          output << "go spurs" << std::endl;
+              output << "ITEM: NUMBER OF ATOMS" << std::endl;
+              output << parts.particles.size() << std::endl;
 
-          //output << "ITEM: BOX BOUNDS" << std::endl;
-          //output << 0.0 << " " << X << std::endl;
-          //output << 0.0 << " " << Y << std::endl;
-          //output << 0.0 << " " << Z << std::endl;
-          
-          //output << "ITEM: ATOMS" << std::endl;
+              output << "ITEM: BOX BOUNDS" << std::endl;
+              output << 0.0 << " " << X << std::endl;
+              output << 0.0 << " " << Y << std::endl;
+              output << 0.0 << " " << Z << std::endl;
+              
+              output << "ITEM: ATOMS" << std::endl;
+            }
+          else
+            {
+              output << parts.particles.size() << std::endl;
+              output << "go spurs" << std::endl;
+            }
+
           for(auto it = parts.particles.begin(); it != parts.particles.end(); it++)
             {
               Particle &p = it->second;
               
-              //output << std::setprecision(17) << it->first << " " << p.type << " " << p.x << " " << p.y << " " << p.z << std::endl;
-              output << std::setprecision(17) << p.type << " " << p.x << " " << p.y << " " << p.z << std::endl;
+              if(outputType.compare("pizza") == 0)
+                output << std::setprecision(17) << it->first << " " << p.type << " " << p.x << " " << p.y << " " << p.z << std::endl;
+              else
+                output << std::setprecision(17) << p.type << " " << p.x << " " << p.y << " " << p.z << std::endl;
             }
         }
 
