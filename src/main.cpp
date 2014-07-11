@@ -707,7 +707,7 @@ int main(int argc, char **argv) {
           auto touching = parts.collide(nx, ny, nz, p.type, pid);
 
           // Reject the situation where three particles meet
-          if(touching.size() >= 2 || reacs.bam[p.type].D == 0.0)
+          if(touching.size() >= 2)
             {
               //std::cout << "heyhey" << std::endl;
               //parts.move(pid, p.x + dx, p.y + dy, p.z + dz);
