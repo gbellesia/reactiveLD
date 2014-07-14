@@ -83,11 +83,10 @@ To define a sphere simply set X,Y and Z equal to the sphere's radius.
 "dt" : timestep (positive float)
 
 "types" : object containing values related to the different atom (molecules etc.) types.
-          Name:value pairs for the object "types" are: 
-              
-              "type" : atom type (positive int)
-              "radius" : atom radius (positive float)
-              "D" : diffusion coefficient (positive float)
+          Name:value pairs for the object "types" are:   
+          "type" : atom type (positive int)
+          "radius" : atom radius (positive float)
+          "D" : diffusion coefficient (positive float)
 
 
 "atoms" : array of objects (one for each defined atom/molecule/entity) containing values for ...
@@ -96,7 +95,8 @@ To define a sphere simply set X,Y and Z equal to the sphere's radius.
           "z" : z-coordinate of atom (float)
           "type" : atom type (positive int)
           
-"atomDist" : array of objects defining for each atom type ...
+"atomDist" : array of objects defining for each atom type a random distribution within the system's container.
+             Name:value pairs are:
              "type" : atom type (positive int)
              "number" : number of atoms of type "type" (positive int)
              
