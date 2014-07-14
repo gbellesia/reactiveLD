@@ -47,6 +47,15 @@ JSON syntax is a subset of the JavaScript object notation syntax:
 - Curly braces hold objects
 - Square brackets hold arrays
 
+JSON values can be:
+
+A number (integer or floating point)
+A string (in double quotes)
+A Boolean (true or false)
+An array (in square brackets)
+An object (in curly braces)
+null
+
 The name:value pairs recognized by RBD are:
 
 "simType" : "periodicBox" - periodic rectangular box (default). 
@@ -57,7 +66,6 @@ The name:value pairs recognized by RBD are:
 "Y" : y-dimension of the rectangular box, ellipsoid semi-principal axis (positive int, float)
 "Z" : z-dimension of the rectangular box, ellipsoid semi-principal axis (positive int, float)
 
-
 "steps" : total number of time steps (positive int) 
 
 "printSteps" : frequency used to save coordinates into the output file (positive int)
@@ -65,11 +73,39 @@ The name:value pairs recognized by RBD are:
 "dt" : timestep (positive float)
 
 
+"types" : object containing values related to the different atom (molecules etc.) types
+              "type" : atom type (positive int)
+              "radius" : atom radius (positive float)
+              "D" : diffusion coefficient (positive float)
 
 
+"atoms" : array of objects (one for each defined atom/molecule/entity) containing values for
+          "x" : x-coordinate of atom (float)
+          "y" : y-coordinate of atom (float)
+          "z" : z-coordinate of atom (float)
+          "type" : atom type (positive int)
+          
+"atomDist" : array of objects defining for each atom type
+             "type" : atom type (positive int)
+             "number" : number of atoms of type "type" (positive int)
+             
+"monatomic" : array of objects defining the monatomic reactions containing values for
+              "A" : reactant (positive int defining the atom type)
+              "B" : product (positive int defining the atom type)
+              "C" : product (positive int defining the atom type)
+              "k" : reaction rate (positive float)
+
+"binary" : array of objects defining the binary reactions containing values for
+              "A" : reactant (positive int defining the atom type)
+              "B" : reactant (positive int defining the atom type)
+              "C" : product (positive int defining the atom type)
+              "D" : product (positive int defining the atom type)
+              "k" : reaction rate (positive float)
+             
+"comment" : string containing a comment
 
 
-
-
+# Example:
+----------
 
 
