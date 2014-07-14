@@ -1,0 +1,11 @@
+{ "X" : 46.41,
+  "Y" : 46.41,
+  "Z" : 46.41,
+  "simType" : "periodicBox",
+  "dt" : 0.1,
+  "steps" : 20000,
+  "printSteps" : 100,
+  "monatomic" : [],
+  "binary" : [],
+  "atomsDist" : [{"type" : 1, "number" : 1000}],
+  "types" : [{ "type" : 1, "radius" : 1.0, "D" : 1.0 }]}
