@@ -1,23 +1,26 @@
 So the RBD simulator is ready to rock and roll. 
 
+----------------
 # Prerequisites:
 ----------------
 Jannson C Library (http://www.digip.org/jansson/)
 GNU Scientific LIbrary (http://www.gnu.org/software/gsl/)
 
-
+--------------------------
 # Building the Executable:
 --------------------------
 To build it, you'll need to copy make.template.inc to make.inc, and then set everything in there to whatever 
 is right for your system. Then just do a 'make' and it should build! The makefile is a little wonk as of now. 
 Always make clean before you make.
 
+------------------------
 # To start a simulation:
 ------------------------
 ./bd_run [inputfile] [outputfile] [rngseed] is the format. 
 
 All arguments are required. rngseed is a number (int).
 
+-----------------
 # Output Formats:
 -----------------
 We currently support two file formats for the output (trajectories):
@@ -32,6 +35,7 @@ To select the LAMMPS file format just add the keyword "pizza" after [rngseed] in
 
 ./bd_run [inputfile] [outputfile] [rngseed] pizza
 
+----------------------
 # Supported Reactions:
 ----------------------
 A --> B
@@ -41,6 +45,7 @@ A --> B + C
 A + B --> null
 We currently don't support: null -> A reactions. But we will soon. Just being lazy.
 
+--------------------
 # Input File Syntax:
 --------------------
 The input format is JSON (http://json.org). 
@@ -110,6 +115,7 @@ To define a sphere simply set X,Y and Z equal to the sphere's radius.
              
 "comment" : string containing a comment
 
+----------
 # Example:
 ----------
 
