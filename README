@@ -28,6 +28,9 @@ The installation of the TopoTools (https://sites.google.com/site/akohlmey/softwa
 is necessary to allow the visualization and analysis  of trajectories with variable number of particles.
 
 2) LAMMPS file format (http://lammps.sandia.gov). This format can be used with the Pizza.py Toolkit (http://pizza.sandia.gov).
+To select the LAMMPS file format just add the keyword "pizza" after [rngseed] in your command line.
+
+./bd_run [inputfile] [outputfile] [rngseed] pizza
 
 # Supported Reactions:
 ----------------------
@@ -36,7 +39,7 @@ A + B --> C
 A + B --> C + D
 A --> B + C
 A + B --> null
-We currently I don't support: null -> A reactions. But we will soon. Just being lazy.
+We currently don't support: null -> A reactions. But we will soon. Just being lazy.
 
 # Input File Syntax:
 --------------------
@@ -66,36 +69,39 @@ The name:value pairs recognized by RBD are:
 "Y" : y-dimension of the rectangular box, ellipsoid semi-principal axis (positive int, float)
 "Z" : z-dimension of the rectangular box, ellipsoid semi-principal axis (positive int, float)
 
+To define a sphere simply set X,Y and Z equal to the sphere's radius.
+
 "steps" : total number of time steps (positive int) 
 
-"printSteps" : frequency used to save coordinates into the output file (positive int)
+"printSteps" : frequency used to save coordinates onto the output file (positive int)
 
 "dt" : timestep (positive float)
 
-
-"types" : object containing values related to the different atom (molecules etc.) types
+"types" : object containing values related to the different atom (molecules etc.) types.
+          Name:value pairs for the object "types" are: 
+              
               "type" : atom type (positive int)
               "radius" : atom radius (positive float)
               "D" : diffusion coefficient (positive float)
 
 
-"atoms" : array of objects (one for each defined atom/molecule/entity) containing values for
+"atoms" : array of objects (one for each defined atom/molecule/entity) containing values for ...
           "x" : x-coordinate of atom (float)
           "y" : y-coordinate of atom (float)
           "z" : z-coordinate of atom (float)
           "type" : atom type (positive int)
           
-"atomDist" : array of objects defining for each atom type
+"atomDist" : array of objects defining for each atom type ...
              "type" : atom type (positive int)
              "number" : number of atoms of type "type" (positive int)
              
-"monatomic" : array of objects defining the monatomic reactions containing values for
+"monatomic" : array of objects defining the monatomic reactions containing values for ...
               "A" : reactant (positive int defining the atom type)
               "B" : product (positive int defining the atom type)
               "C" : product (positive int defining the atom type)
               "k" : reaction rate (positive float)
 
-"binary" : array of objects defining the binary reactions containing values for
+"binary" : array of objects defining the binary reactions containing values for ...
               "A" : reactant (positive int defining the atom type)
               "B" : reactant (positive int defining the atom type)
               "C" : product (positive int defining the atom type)
@@ -103,7 +109,6 @@ The name:value pairs recognized by RBD are:
               "k" : reaction rate (positive float)
              
 "comment" : string containing a comment
-
 
 # Example:
 ----------
