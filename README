@@ -1,101 +1,75 @@
-So the BD code is about ready to rock and roll. Currently the program supports periodic boundary rectangle-like things (they don't need to be squares, but that's all I've tested).
+So the RBD simulator is ready to rock and roll. 
 
-To build it, you'll need to copy make.template.inc to make.inc, and then set everything in there to whatever is right for your system.
+# Prerequisites:
+----------------
+Jannson C Library (http://www.digip.org/jansson/)
+GNU Scientific LIbrary (http://www.gnu.org/software/gsl/)
 
-You'll need to have libjansson installed (http://www.digip.org/jansson/). This is probly available in repos
 
-Then just do a 'make' and it should build! The makefile is a little wonk as of now. Always make clean before you make.
+# Building the Executable:
+--------------------------
+To build it, you'll need to copy make.template.inc to make.inc, and then set everything in there to whatever 
+is right for your system. Then just do a 'make' and it should build! The makefile is a little wonk as of now. 
+Always make clean before you make.
 
-Anyway
+# To start a simulation:
+------------------------
+./bd_run [inputfile] [outputfile] [rngseed] is the format. 
 
-./bd_run [inputfile] [outputfile] [rngseed] is the format. All arguments are required. Rngseed is a number (int).
+All arguments are required. rngseed is a number (int).
 
---
+# Output Formats:
+-----------------
+We currently support two file formats for the output (trajectories):
 
-The output format can be used as input to pizza.py (http://pizza.sandia.gov/) which is okay to install on Linux and really difficult to install in Mac os X.
+1) Standard XYZ file format (en.wikipedia.org/wiki/XYZ_file_format). This is the default.
+This file format can be used with VMD (http://www.ks.uiuc.edu/Research/vmd/) for visualization and analysis.
+The installation of the TopoTools (https://sites.google.com/site/akohlmey/software/topotools) VMD plugin (version 1.4 or later) 
+is necessary to allow the visualization and analysis  of trajectories with variable number of particles.
 
-To visualize any output, just do:
+2) LAMMPS file format (http://lammps.sandia.gov). This format can be used with the Pizza.py Toolkit (http://pizza.sandia.gov).
 
-pizza.py -f viz.py [outputfile]
+# Supported Reactions:
+----------------------
+A --> B
+A + B --> C
+A + B --> C + D
+A --> B + C
+A + B --> null
+We currently I don't support: null -> A reactions. But we will soon. Just being lazy.
 
-Unfortunately, you'll have to set the particle radii manually in viz.py if you use weird radii, but you'll get used to it.
+# Input File Syntax:
+--------------------
+The input format is JSON (http://json.org). 
+JSON syntax is a subset of the JavaScript object notation syntax:
+- Data is in name/value pairs
+- Data is separated by commas
+- Curly braces hold objects
+- Square brackets hold arrays
 
-The line 'g.arad([1, 2], [1.0, 2.0])' says plot particles of type 1 with radius 1 and particles of type 2 with radius 2.0
+The name:value pairs recognized by RBD are:
 
---
+"simType" : "periodicBox" - periodic rectangular box (default). 
+            "spherical" - confining ellipsoid.
+            "boxWithWalls" - confining rectangular box.
 
-The input format is json. I've attached two input files.
+"X" : x-dimension of the rectangular box, ellipsoid semi-principal axis (positive int, float)
+"Y" : y-dimension of the rectangular box, ellipsoid semi-principal axis (positive int, float)
+"Z" : z-dimension of the rectangular box, ellipsoid semi-principal axis (positive int, float)
 
-There are two ways to specify atoms:
-1. Specify exactly what atoms appear where
-2. Specify N number of atoms should be initialized in the box
 
-The difference is highlighted below with input1.json (inputs two specified atoms) and input2.json (specifies the creation of 100 type 1 atoms and 50 others).
+"steps" : total number of time steps (positive int) 
 
---
+"printSteps" : frequency used to save coordinates into the output file (positive int)
 
-Also!
+"dt" : timestep (positive float)
 
-input1 shows all the types of reactions that are current supported
 
-I list the reactions here that are happening. You can figure out how this translates to syntax:
 
-1 -> 2 at rate 0.1
-2 -> 3 + 4 at rate 0.1
-1 + 1 -> null at rate 2.0
-1 + 2 -> 4 at rate 2.0
 
-You see how I used the atom "types"? And then the letter identifiers in the JSON objects? Just look at it long enough.
 
-Currently I don't support:
 
-null -> A reactions. But I can soon. Just being lazy.
 
---
 
-Also the inputs show how particle radius and diffusion constants are set
 
---
 
-Also the input shows how the box dimensions (X, Y, Z) are set.
-
-"steps" is the number of steps the simulation will take. Printsteps mean print output every n steps. So if it's 1, it prints at every time point. Current it doesn't print the last timepoint, so just simulate 1 more step than you want output for.
-
-"dt" is the timestep.
-
---
-
-The diffusion tests are running. Results are a bit weird but I think it's a problem with input -- not the code.
-
-There are three tests, and they are all kinda ghetto:
-1. irr.py
-
-You should be able to run this by just typing ./irr.py outfilename. It should produce a matplotlib plot with a histogram of the distances in Frazier & Alber Figure 4.
-
-If you want the raw data, it'll be in outfilename.
-
-By default it only does 1000 runs. You'll need to have like 100000 to see good results.
-
-2. d.py
-
-You should be able to just run this typing ./d.py
-
-The output of this is a matrix that can be processed with d.m. It fits a bunch of lines to curves and tells you about your diffusion constants for various densities of atoms
-
-The curves it computes the diffusion constants from are plotted with matplotlib.
-
-The results from this test are still weird. I'm not sure I trust them.
-
-3. ann.in
-
-To run this, type ./bd_run ann.in ann.out.txt 50003409
-
-After that finishes,
-
-./ann.py ann.out.txt
-
-That'll produce a plot similar to that in Frazier and Alber Fig 5
-
-The last number there is a random number seed, so just use whatever
-
-These tests scripts are questionable, as are any test scripts I write, so just make your own copies to mess with and try not to mess up the repo ones too much. We'll all end up with our own tests likely. These files are just in the repo so you can get them as reference.
