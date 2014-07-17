@@ -70,11 +70,11 @@ The name:value pairs recognized by RBD are:
             "spherical" - confining ellipsoid.
             "boxWithWalls" - confining rectangular box.
 
-"X" : x-dimension of the rectangular box, ellipsoid semi-principal axis (positive int, float)
-"Y" : y-dimension of the rectangular box, ellipsoid semi-principal axis (positive int, float)
-"Z" : z-dimension of the rectangular box, ellipsoid semi-principal axis (positive int, float)
+"X" : x-dimension of the rectangular box, ellipsoid principal axis (positive int, float)
+"Y" : y-dimension of the rectangular box, ellipsoid principal axis (positive int, float)
+"Z" : z-dimension of the rectangular box, ellipsoid principal axis (positive int, float)
 
-To define a sphere simply set X,Y and Z equal to the sphere's radius.
+To define a sphere simply set X,Y and Z equal to the sphere's diameter.
 
 "steps" : total number of time steps (positive int) 
 
