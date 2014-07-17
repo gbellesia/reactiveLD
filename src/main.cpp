@@ -520,7 +520,7 @@ int main(int argc, char **argv) {
         }
     }
 
-  std::cout << " " << parts.particles.size() << std::endl;
+  std::cout << "Total number of particles at time 0: " << parts.particles.size() << std::endl;
 
   json_decref(root);
 
@@ -529,11 +529,11 @@ int main(int argc, char **argv) {
   output.open(outFileName);
   //output << "reaction fired" << std::endl;
 
-  std::cout << "Runnin' stuff" << std::endl;
+  std::cout << "Reactive Brownian Dynamics starts ..." << std::endl;
 
   for(int s = 0; s < steps; s++)
     {
-      std::cout << s << std::endl;
+      if (!(s%10)) std::cout << s  << " " << dt*s  << " " << parts.particles.size() << std::endl;
       //if(parts.particles.size() < 2)
       //  output << "wtf has happened?\n" << std::endl;
       if(s % printSteps == 0)
