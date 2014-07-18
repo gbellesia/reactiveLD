@@ -24,7 +24,7 @@ public:
 
   double dX, dY, dZ;
 
-  bool spherical, periodic;
+  bool spherical, cylinder, periodic;
 
   Reactions &reacs;
 
@@ -46,7 +46,7 @@ public:
     return (x % Nx) * Ny * Nz + (y % Ny) * Nz + (z % Nz);
   }
 
-  Particles(double maxR, double X, double Y, double Z, bool spherical, bool periodic, Reactions &reacs) : X(X), Y(Y), Z(Z), spherical(spherical), periodic(periodic), reacs(reacs)
+  Particles(double maxR, double X, double Y, double Z, bool spherical, bool cylinder, bool periodic, Reactions &reacs) : X(X), Y(Y), Z(Z), spherical(spherical), cylinder(cylinder), periodic(periodic), reacs(reacs)
   {
     Nx = int(X / maxR) + 1;
     Ny = int(Y / maxR) + 1;
@@ -128,6 +128,14 @@ public:
           {
             return indexListT({ -1 });
           }
+      }
+    
+    if(cylinder)
+      {
+	    if( ((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y)) >= 1.0 || zz / Z >= 1.0) )
+	        {
+		    return indexListT({ -1 });
+		}
       }
 
     // We use a 3x3x3 collision grid
