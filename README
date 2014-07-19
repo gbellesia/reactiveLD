@@ -68,15 +68,17 @@ The name:value pairs recognized by RBD are:
 
 "simType" : "periodicBox" - periodic rectangular box (default). 
             "ellipsoid" - confining ellipsoid.
-            "cylinder" - confining cylinder
+            "cylinder" - confining cylinder.
+            "capsule" - confining spherocylinder.
             "boxWithWalls" - confining rectangular box.
 
-"X" : x-dimension of the rectangular box, ellipsoid principal axis, cylinder diameter (positive int, float)
-"Y" : y-dimension of the rectangular box, ellipsoid principal axis, cylinder diameter (positive int, float)
-"Z" : z-dimension of the rectangular box, ellipsoid principal axis, height of the cylinder (positive int, float)
+"X" : x-dimension of the rectangular box, ellipsoid principal axis, cylinder diameter 1, capsule diameter 1 (positive int, float)
+"Y" : y-dimension of the rectangular box, ellipsoid principal axis, cylinder diameter 2, capsule diameter 2 (positive int, float)
+"Z" : z-dimension of the rectangular box, ellipsoid principal axis, height of the cylinder, height of the capsule (positive int, float)
 
 To define a sphere, use "ellipsoid" and simply set X,Y and Z equal to the sphere's diameter.
-To define a cylinder, set X and Y equal to the cylinder diameter and Z to the cylinder height.
+To define a cylinder, set X and Y equal to the cylinder diameters and Z to the cylinder height.
+The capsule is defined using parameters X,Y and Z as in the cylinder, plus a third diameter (defining the two "caps") D3 = max(X,Y).
 
 "steps" : total number of time steps (positive int) 
 
