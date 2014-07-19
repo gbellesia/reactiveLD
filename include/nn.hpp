@@ -5,6 +5,14 @@
 #include "util.hpp"
 #include "Reactions.hpp"
 
+enum BoxType {
+  ellipsoid,
+  cylinder,
+  capsule,
+  boxWithWalls,
+  periodicBox
+};
+
 class Particle {
 public:
   double x, y, z;
@@ -24,7 +32,7 @@ public:
 
   double dX, dY, dZ;
 
-  bool spherical, cylinder, periodic;
+  BoxType boxType;
 
   Reactions &reacs;
 
@@ -46,7 +54,7 @@ public:
     return (x % Nx) * Ny * Nz + (y % Ny) * Nz + (z % Nz);
   }
 
-  Particles(double maxR, double X, double Y, double Z, bool spherical, bool cylinder, bool periodic, Reactions &reacs) : X(X), Y(Y), Z(Z), spherical(spherical), cylinder(cylinder), periodic(periodic), reacs(reacs)
+  Particles(double maxR, double X, double Y, double Z, BoxType boxType, Reactions &reacs) : X(X), Y(Y), Z(Z), boxType(boxType), reacs(reacs)
   {
     Nx = int(X / maxR) + 1;
     Ny = int(Y / maxR) + 1;
@@ -114,28 +122,38 @@ public:
     yy = std::abs(adjust(y, Y) - Y / 2.0) + radius;
     zz = std::abs(adjust(z, Z) - Z / 2.0) + radius;
 
-    if(!periodic)
+    if(boxType == BoxType::boxWithWalls)
       {
         if((x - radius) < 0 || (x + radius) > X || (y - radius) < 0 || (y + radius) > Y || (z - radius) < 0 || (z + radius) > Z)
           {
             return indexListT({ -1 });
           }
       }
-    
-    if(spherical)
+    else if(boxType == BoxType::ellipsoid)
       {
         if((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y) + 4 * zz * zz / (Z * Z)) >= 1.0)
           {
             return indexListT({ -1 });
           }
       }
-    
-    if(cylinder)
+    else if(boxType == BoxType::cylinder)
       {
-	    if( ((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y)) >= 1.0 || zz / Z >= 1.0) )
-	        {
-		    return indexListT({ -1 });
-		}
+        if( !((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y)) < 1.0 && std::abs(zz / Z) < 0.5) )
+          {
+            return indexListT({ -1 });
+          }
+      }
+    else if(boxType == BoxType::capsule)
+      {
+        double maxXY = std::max(X, Y);
+        double pm = -Z / 2.0 + maxXY / 2.0, pp = Z / 2.0 - maxXY / 2.0;
+
+        if( !(((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y)) < 1.0 && zz < pm && zz > pp) || //main cylinder
+              (4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y) + 4 * (zz - pm) * (zz - pm) / (maxXY * maxXY)) < 1.0 ||
+              (4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y) + 4 * (zz - pp) * (zz - pp) / (maxXY * maxXY)) < 1.0))
+          {
+            return indexListT({ -1 });
+          }
       }
 
     // We use a 3x3x3 collision grid
@@ -174,7 +192,7 @@ public:
 
                     double dx, dy, dz;
 
-                    if(periodic)
+                    if(boxType == BoxType::periodicBox)
                       {
                         dx = cyclicDistance(pj.x, x, X);
                         dy = cyclicDistance(pj.y, y, Y);

@@ -94,43 +94,37 @@ int main(int argc, char **argv) {
   json_t *aTypes = json_object_get(root, "types");
   json_t *type = json_object_get(root, "simType");
 
-  bool spherical = false;
-  bool cylinder = false;
-  bool periodic = true;
+  BoxType boxType;
 
   if(type == NULL || !json_is_string(type))
     {
+      boxType = BoxType::periodicBox;
     }
   else
     {
-      if(strcmp(json_string_value(type), "spherical") == 0)
+      if(strcmp(json_string_value(type), "ellipsoid") == 0)
         {
-          spherical = true;
-          periodic = false;
-	  cylinder = false;
+          boxType = BoxType::ellipsoid;
+        }
+      if(strcmp(json_string_value(type), "capsule") == 0)
+        {
+          boxType = BoxType::capsule;
         }
       else if(strcmp(json_string_value(type), "cylinder") == 0)
-       {
-          spherical = false;
-          periodic = false;
-	  cylinder = true;
-         
-       }
+        {
+          boxType = BoxType::cylinder;
+        }
       else if(strcmp(json_string_value(type), "boxWithWalls") == 0)
         {
-          spherical = false;
-          periodic = false;
-	  cylinder = false;
+          boxType = BoxType::boxWithWalls;
         }
       else if(strcmp(json_string_value(type), "periodicBox") == 0)
         {
-          spherical = false;
-          periodic = true;
-	  cylinder = false;
+          boxType = BoxType::periodicBox;
         }
       else
         {
-          std::cout << "simType must be defined as either \"spherical\", or \"cylinder\", or \"boxWithWalls\", or \"periodicBox\"" << std::endl;
+          std::cout << "simType must be defined as either \"ellipsoid\", or \"capsule\" or \"cylinder\", or \"boxWithWalls\", or \"periodicBox\"" << std::endl;
       
           if(Xj != NULL)
             json_decref(root);
@@ -399,7 +393,7 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-  Particles parts(maxR, X, Y, Z, spherical, cylinder, periodic, reacs);
+  Particles parts(maxR, X, Y, Z, boxType, reacs);
 
   if(atomsArray != NULL)
     {
