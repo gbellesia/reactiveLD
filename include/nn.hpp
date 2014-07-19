@@ -122,14 +122,15 @@ public:
     yy = std::abs(adjust(y, Y) - Y / 2.0) + radius;
     zz = std::abs(adjust(z, Z) - Z / 2.0) + radius;
 
-    if(boxType == BoxType::boxWithWalls)
+    if(boxType != BoxType::periodicBox)
       {
         if((x - radius) < 0 || (x + radius) > X || (y - radius) < 0 || (y + radius) > Y || (z - radius) < 0 || (z + radius) > Z)
           {
             return indexListT({ -1 });
           }
       }
-    else if(boxType == BoxType::ellipsoid)
+
+    if(boxType == BoxType::ellipsoid)
       {
         if((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y) + 4 * zz * zz / (Z * Z)) >= 1.0)
           {
