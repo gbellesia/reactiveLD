@@ -149,7 +149,7 @@ public:
         double maxXY = std::max(X, Y);
         double pm = -Z / 2.0 + maxXY / 2.0, pp = Z / 2.0 - maxXY / 2.0;
 
-        if( !(((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y)) < 1.0 && zz < pm && zz > pp) || //main cylinder
+        if( !(((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y)) < 1.0 && zz > pm && zz < pp) || //main cylinder
               (4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y) + 4 * (zz - pm) * (zz - pm) / (maxXY * maxXY)) < 1.0 ||
               (4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y) + 4 * (zz - pp) * (zz - pp) / (maxXY * maxXY)) < 1.0))
           {
