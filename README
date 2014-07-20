@@ -10,15 +10,15 @@ GNU Scientific LIbrary (http://www.gnu.org/software/gsl/)
 # Building the Executable:
 --------------------------
 To build it, you'll need to copy make.template.inc to make.inc, and then set everything in there to whatever 
-is right for your system. Then just do a 'make' and it should build! The makefile is a little wonk as of now. 
-Always make clean before you make.
+is right for your system (if you're building on a mac, perhaps use make.mac.in). Then just do a 'make' and it 
+should build! The makefile is a little wonk as of now. Always do a 'make clean' before you do a 'make'.
 
 ------------------------
 # To start a simulation:
 ------------------------
 ./bd_run [inputfile] [outputfile] [rngseed] is the format. 
 
-All arguments are required. rngseed is a number (int).
+All arguments are required. rngseed is a positive integer defining the seed for the random number generator.
 
 -----------------
 # Output Formats:
