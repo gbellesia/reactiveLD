@@ -18,7 +18,7 @@ Always make clean before you make.
 ------------------------
 ./bd_run [inputfile] [outputfile] [rngseed] is the format. 
 
-All arguments are required. rngseed is a number (int).
+All arguments are required. The [rngseed] argument is the seed of the random number generator. It is an integer (non-negative) number.
 
 -----------------
 # Output Formats:
