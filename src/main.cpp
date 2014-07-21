@@ -531,11 +531,11 @@ int main(int argc, char **argv) {
   output.open(outFileName);
   //output << "reaction fired" << std::endl;
 
-  std::cout << "Reactive Brownian Dynamics starts ..." << std::endl;
+  std::cout << "Reactive Brownian Dynamics starts ... (Random Seed = " << argv[3] << ")" << std::endl;
 
   for(int s = 0; s < steps; s++)
     {
-      if (!(s%10)) std::cout << s  << " " << dt*s  << " " << parts.particles.size() << std::endl;
+      if (!(s%100)) std::cout << s  << " " << dt*s  << " " << parts.particles.size() << std::endl;
       //if(parts.particles.size() < 2)
       //  output << "wtf has happened?\n" << std::endl;
       if(s % printSteps == 0)
