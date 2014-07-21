@@ -100,13 +100,13 @@ int main(int argc, char **argv) {
     {
       boxType = BoxType::periodicBox;
     }
-  else
-    {
-      if(strcmp(json_string_value(type), "ellipsoid") == 0)
+  //else
+    //{
+      else if(strcmp(json_string_value(type), "ellipsoid") == 0)
         {
           boxType = BoxType::ellipsoid;
         }
-      if(strcmp(json_string_value(type), "capsule") == 0)
+      else if(strcmp(json_string_value(type), "capsule") == 0)
         {
           boxType = BoxType::capsule;
         }
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
       
           return 1;
         }
-    }
+    //}
 
   if(Xj == NULL || !json_is_number(Xj))
     {
