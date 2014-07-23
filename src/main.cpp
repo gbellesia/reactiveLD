@@ -524,18 +524,45 @@ int main(int argc, char **argv) {
 
   std::cout << "Total number of particles at time 0: " << parts.particles.size() << std::endl;
 
+///////////////////////////////////////////
+  int ns = (int)json_array_size(aTypes);
+  int nspecies[ns];
+//////////////////////////////////////////
+
   json_decref(root);
 
   std::ofstream output;
+  std::ofstream output2; 
 
   output.open(outFileName);
+  output2.open("pop-"+outFileName);
   //output << "reaction fired" << std::endl;
 
   std::cout << "Reactive Brownian Dynamics starts ... (Random Seed = " << argv[3] << ")" << std::endl;
 
   for(int s = 0; s < steps; s++)
     {
-      if (!(s%100)) std::cout << s  << " " << dt*s  << " " << parts.particles.size() << std::endl;
+
+     ///GHETTOCODE///////////////////////////////////////////////////////
+      for (int i=0;i<ns;i++) nspecies[i] = 0;
+        for(auto it = parts.particles.begin(); it != parts.particles.end(); it++)
+          {
+              Particle &p = it->second;
+              nspecies[(int)(p.type-1)] += 1;
+	  }
+      
+      for (int i=0;i<ns;i++) output2 << nspecies[i] << " ";
+      output2 << std::endl;
+
+      if (!(s%100)) {
+        std::cout << s  << " " << dt*s  << " ";
+        for (int i=0;i<ns;i++) std::cout << nspecies[i] << " ";
+        std::cout << std::endl;
+      }
+     ///GHETTOCODE///////////////////////////////////////////////////////
+
+
+
       //if(parts.particles.size() < 2)
       //  output << "wtf has happened?\n" << std::endl;
       if(s % printSteps == 0)
@@ -1000,4 +1027,5 @@ int main(int argc, char **argv) {
         }
     }
   output.close();
+  output2.close();
 }
