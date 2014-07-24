@@ -10,15 +10,15 @@ GNU Scientific LIbrary (http://www.gnu.org/software/gsl/)
 # Building the Executable:
 --------------------------
 To build it, you'll need to copy make.template.inc to make.inc, and then set everything in there to whatever 
-is right for your system (if you're building on a mac, perhaps use make.mac.in). Then just do a 'make' and it 
-should build! The makefile is a little wonk as of now. Always do a 'make clean' before you do a 'make'.
+is right for your system. Then just do a 'make' and it should build! The makefile is a little wonk as of now. 
+Always make clean before you make.
 
 ------------------------
 # To start a simulation:
 ------------------------
 ./bd_run [inputfile] [outputfile] [rngseed] is the format. 
 
-All arguments are required. rngseed is a positive integer defining the seed for the random number generator.
+All arguments are required. The [rngseed] argument is the seed of the random number generator. It is an integer (non-negative) number.
 
 -----------------
 # Output Formats:
@@ -155,8 +155,16 @@ The system is composed by two (chemical) species: type 1 and type 2 that react a
 type1 ---> 2 * type1 (k1=10)
 type1 + type2 ---> 2 * type2 (k2 = 0.01)
 type2 ---> 0 (k3=10)
-The system is enclosed in a rectangular periodic box of dimensions 200x200x20.
+k1 and k3 have units of 1/seconds
+k2 is units of 1/(molecules * seconds)
+Note that k1/k2 = k3/k2 = 1000 which is the initial population of species A and B.
+If ordinary differential equations are used to model this system using the parameters defined above, the population of 
+the two species remains constant in time at the value of 1000 units.
+
+The value 4.818e12 for k2 is obtained by multiplying 0.01 by (V*N_A) where V is the box volume in liters and N_A
+is the Avogadro's number (6.022e23), i.e., changing the units of k2 from 1/(molecules * seconds) to 1/(moles * seconds).
+The system is enclosed in a rectangular periodic box of dimensions 200x200x20 micrometers^3 = 8e-10 liters.
 The population for both type1 and type2 species is set to 1000.
-The two species are represented as hard-spheres with a radius = 1.775 and a diffusion coefficient of D = 100.
-The timestep is 0.001 and the number of time steps is fixed at 10000. This gives a total simulation time of 10.
+The two species are represented as hard-spheres with a radius = 1.775 micrometers and a diffusion coefficient of D = 100 micrometers^2/seconds.
+The timestep is 0.001 seconds and the number of time steps is fixed at 10000. This gives a total simulation time of 10 seconds.
 The coordinates of the two species are saved every 10 time steps in the output file "lk.out" (XYZ format).
