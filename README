@@ -123,7 +123,7 @@ The capsule is defined using parameters X,Y and Z as in the cylinder, plus a thi
 # Example:
 ----------
 
-The following is an example input file (lk.in) that defines and simulate a spatial Lotka-Volterra model.
+The following is an example input file (lk.in) that defines and simulates a spatial Lotka-Volterra model.
 
 #--------------------------------------------------------------------
 { "X" : 200,
