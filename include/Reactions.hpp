@@ -164,16 +164,16 @@ public:
 class BrownianAtom {
 public:
   int type;
-  double radius, D;
+  double mass, gamma, radius, D;
     
   BrownianAtom() {};
-  BrownianAtom(int type, double radius, double D) : type(type), radius(radius), D(D) {};
+  BrownianAtom(int type, double mass, double gamma, double radius, double D) : type(type), mass(mass), gamma(gamma), radius(radius), D(D) {};
 
   std::string str()
   {
     std::stringstream out;
 
-    out << "Atom type: " << type << ", D: " << D << ", R: " << radius;
+    out << "Atom type: " << type << ", D: " << D << ", gamma: " << gamma << ", mass: " << mass << ", R: " << radius;
 
     return out.str();
   }

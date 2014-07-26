@@ -16,6 +16,7 @@ enum BoxType {
 class Particle {
 public:
   double x, y, z;
+  double fx, fy, fz;
   int type;
 
   //Need this constructor to use this class in maps (with the [] operator)o
@@ -56,9 +57,9 @@ public:
 
   Particles(double maxR, double X, double Y, double Z, BoxType boxType, Reactions &reacs) : X(X), Y(Y), Z(Z), boxType(boxType), reacs(reacs)
   {
-    Nx = int(X / maxR) + 1;
-    Ny = int(Y / maxR) + 1;
-    Nz = int(Z / maxR) + 1;
+    Nx = int(X / (3.0 * maxR)) + 1;
+    Ny = int(Y / (3.0 * maxR)) + 1;
+    Nz = int(Z / (3.0 * maxR)) + 1;
 
     dX = X / Nx;
     dY = Y / Ny;
@@ -220,6 +221,93 @@ public:
       }
 
     return indexList;
+  }
+
+  void computeForces(Reactions &reacs)
+  {
+    // Initialize forces to boundary forces
+    for(auto it = particles.begin(); it != particles.end(); it++)
+      {
+        Particle &particle = it->second;
+
+        double k1 = 1.0;
+        double k2 = -1.0;
+        double exp1 = 2.0; // exponent of the potential
+        double exp2 = 2.0; // exponent of the potential
+        double dist2 = (particle.x - X / 2.0) * (particle.x - X / 2.0) + (particle.y - Y / 2.0) * (particle.y - Y / 2.0) + (particle.z - Z / 2.0) * (particle.z - Z / 2.0);
+        double dist = sqrt(dist2);
+        double R = reacs.bam[particle.type].radius;
+        double L = X / 2.0;
+
+        double fval, rval;
+        if (dist > L) {
+          cx = cx / dist;
+          cy = cy / dist;
+          cz = cz / dist;
+          rval = fabs(dist - L);
+          fval = - (exp1) * k1;
+          fval *= pow(rval, exp1 - 1);
+          particle.fx = fval * cx;
+          particle.fy = fval * cy;
+          particle.fz = fval * cz;
+        } else {
+          particle.fx = 0.0;
+          particle.fy = 0.0;
+          particle.fz = 0.0;
+        }
+
+        if (dist > (X / 2.0 - R)) {
+          cx = cx / dist;
+          cy = cy / dist;
+          cz = cz / dist;
+          rval = fabs(dist - (L-R));
+          fval = - (exp2) * k2;
+          fval *= pow(rval, exp2-1);
+          particle.fx += fval * cx;
+          particle.fy += fval * cy;
+          particle.fz += fval * cz;
+        } else {
+          particle.fx += 0.0;
+          particle.fy += 0.0;
+          particle.fz += 0.0;
+        }
+      }
+
+    for(auto binit = bins.begin(); binit != bins.end(); binit++)
+      {
+        for(auto it = binit->second.begin(); it != binit->second.end(); it++)
+          {
+            for(auto it2 = it + 1; it2 != binit->second.end(); it++)
+              {
+                //Particle &particle1, &particle2 = it2->second;
+
+                // This adds the incremental bit of force between these two particles
+                double dx = it2->second.x - it->second.x,
+                  dy = it2->second.y - it->second.y,
+                  dz = it2->second.z - it->second.z;
+
+                double r2 = sqrt(dx * dx + dy * dy + dz * dz);
+                double sigma = reacs.bam[it->second.type].sigma + reacs.bam[it2->second.type].sigma;
+                double eps = sqrt(reacs.bam[it->second.type].eps * reacs.bam[it2->second.type].eps);
+                double ll = 1.0;
+                double rc2 = pow(3.0*sigma,2);
+
+                double ljrcut = 24.0 * eps *(2.0 * pow(sigma,12)/pow(rc2,7) - ll * pow(sigma,6)/pow(rc2,4));
+
+                double f = 24.0 * eps *(2.0 * pow(sigma,12)/pow(r2,7) - ll * pow(sigma,6)/pow(r2,4)) - ljrcut;
+
+                it->second.fx -= f * dx;
+                it->second.fy -= f * dy;
+                it->second.fz -= f * dz;
+
+                it2->second.fx += f * dx;
+                it2->second.fy += f * dy;
+                it2->second.fz += f * dz;
+
+                //incrementForce(it->second, it2->second);
+              }
+          }
+      }
   }
 
   // Indicate that particle has moved. Update it in the index. Keep the same id
