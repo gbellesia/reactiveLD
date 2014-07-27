@@ -48,6 +48,8 @@ public:
 
   double dX, dY, dZ;
 
+  double ll;
+
   BoxType boxType;
 
   Reactions &reacs;
@@ -70,7 +72,7 @@ public:
     return (x % Nx) * Ny * Nz + (y % Ny) * Nz + (z % Nz);
   }
 
-  Particles(double maxR, double X, double Y, double Z, BoxType boxType, Reactions &reacs) : X(X), Y(Y), Z(Z), boxType(boxType), reacs(reacs)
+  Particles(double maxR, double X, double Y, double Z, double ll, BoxType boxType, Reactions &reacs) : X(X), Y(Y), Z(Z), ll(ll), boxType(boxType), reacs(reacs)
   {
     Nx = int(X / (3.0 * maxR)) + 1;
     Ny = int(Y / (3.0 * maxR)) + 1;
@@ -262,9 +264,8 @@ public:
                   dz = particle1.z - particle2.z;
 
                 double r2 = sqrt(dx * dx + dy * dy + dz * dz);
-                double sigma = reacs.bam[particle1.type].radius + reacs.bam[particle2.type].radius;
+                double sigma = (reacs.bam[particle1.type].radius + reacs.bam[particle2.type].radius) / 2.0;
                 double eps = sqrt(reacs.bam[particle1.type].eps * reacs.bam[particle2.type].eps);
-                double ll = 1.0;
                 double rc2 = pow(3.0*sigma,2);
 
                 double ljrcut = 24.0 * eps *(2.0 * pow(sigma,12)/pow(rc2,7) - ll * pow(sigma,6)/pow(rc2,4));

@@ -20,8 +20,8 @@
 #define debug false
 
 int main(int argc, char **argv) {
-  double X = 10000, Y = 10000, Z = 10000;
-  double kb = 1, T = 1;
+  double X = 10000, Y = 10000, Z = 10000,
+    ll = 1, kb = 1, T = 1;
 
   //int N = 10;
 
@@ -93,6 +93,7 @@ int main(int argc, char **argv) {
   json_t *Tj = json_object_get(root, "T");
   json_t *bArray = json_object_get(root, "binary");
   json_t *aTypes = json_object_get(root, "types");
+  json_t *llj = json_object_get(root, "ll");
 
   BoxType boxType = BoxType::ellipsoid;
 
@@ -101,6 +102,16 @@ int main(int argc, char **argv) {
       std::cout << "X must be a number" << std::endl;
       
       if(Xj != NULL)
+        json_decref(root);
+      
+      return 1;
+    }
+
+  if(llj == NULL || !json_is_number(llj))
+    {
+      std::cout << "ll must be a number" << std::endl;
+      
+      if(llj != NULL)
         json_decref(root);
       
       return 1;
@@ -164,6 +175,7 @@ int main(int argc, char **argv) {
   dt = json_number_value(dtj);
   kb = json_number_value(kbj);
   T = json_number_value(Tj);
+  ll = json_number_value(llj);
 
   // Parse the binary reactions
   for(int i = 0; i < (int)json_array_size(bArray); i++)
@@ -385,7 +397,7 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-  Particles parts(maxR, X, Y, Z, boxType, reacs);
+  Particles parts(maxR, X, Y, Z, ll, boxType, reacs);
 
   if(atomsArray != NULL)
     {
@@ -534,7 +546,7 @@ int main(int argc, char **argv) {
   double nx, ny, nz,
     xx, yy, zz;
 
-  double momentum;
+  double momentum, energy;
   for(int s = 0; s < steps; s++)
     {
       if (!(s%10)) std::cout << s  << " " << dt*s  << " " << parts.particles.size() << std::endl;
