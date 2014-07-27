@@ -6,22 +6,37 @@
 #include "Reactions.hpp"
 
 enum BoxType {
-  ellipsoid,
-  cylinder,
-  capsule,
-  boxWithWalls,
-  periodicBox
+  ellipsoid
 };
 
 class Particle {
 public:
   double x, y, z;
   double fx, fy, fz;
+  double px, py, pz;
   int type;
 
   //Need this constructor to use this class in maps (with the [] operator)o
   Particle() {};
-  Particle(double x, double y, double z, int type) : x(x), y(y), z(z), type(type) {};
+  Particle(double x, double y, double z, double px, double py, double pz, int type) : x(x), y(y), z(z), px(px), py(py), pz(pz), type(type) {};
+
+  std::string str()
+  {
+    std::stringstream ss;
+
+    ss << "x : " << x << std::endl <<
+      "y : " << y << std::endl <<
+      "z : " << z << std::endl <<
+      "px : " << px << std::endl <<
+      "py : " << py << std::endl <<
+      "pz : " << pz << std::endl <<
+      "fx : " << fx << std::endl <<
+      "fy : " << fy << std::endl <<
+      "fz : " << fz << std::endl <<
+      "type : " << type << std::endl;
+
+    return ss.str();
+  }
 };
 
 class Particles {
@@ -69,16 +84,16 @@ public:
   // Insert a particle of given type
   //   return index if success
   //   print error if failure and quit //return -1 if failure
-  int insertParticle(double x, double y, double z, int type, int id = -1)
+  int insertParticle(double x, double y, double z, double px, double py, double pz, int type, int id = -1)
   {
-    indexListT otherParticles = collide(x, y, z, type, id);
+    //indexListT otherParticles = collide(x, y, z, type, id);
 
-    if(otherParticles.size() > 0)
+    /*if(otherParticles.size() > 0)
       {
         std::cout << "Failed to insert new particle. Check collisions first" << std::endl;
 
         exit(-1);
-      }
+        }*/
 
     if(id == -1)
       {
@@ -96,7 +111,10 @@ public:
           }
       }
 
-    particles[id] = Particle(x, y, z, type);
+    particles[id] = Particle(x, y, z, px, py, pz, type);
+
+    //std::cout << x << " " << y << " " << z << " " << std::endl;
+    //std::cout << X << " " << Y << " " << Z << " " << std::endl;
 
     int bin = idx(x, y, z);
 
@@ -115,49 +133,6 @@ public:
   // Return a list of all particles that collide with this atom 
   indexListT collide(double x, double y, double z, int type, int id = -1)
   {
-    double xx, yy, zz;
-
-    double radius = reacs.bam[type].radius;
-
-    xx = std::abs(adjust(x, X) - X / 2.0) + radius;
-    yy = std::abs(adjust(y, Y) - Y / 2.0) + radius;
-    zz = std::abs(adjust(z, Z) - Z / 2.0) + radius;
-
-    if(boxType != BoxType::periodicBox)
-      {
-        if((x - radius) < 0 || (x + radius) > X || (y - radius) < 0 || (y + radius) > Y || (z - radius) < 0 || (z + radius) > Z)
-          {
-            return indexListT({ -1 });
-          }
-      }
-
-    if(boxType == BoxType::ellipsoid)
-      {
-        if((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y) + 4 * zz * zz / (Z * Z)) >= 1.0)
-          {
-            return indexListT({ -1 });
-          }
-      }
-    else if(boxType == BoxType::cylinder)
-      {
-        if( !((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y)) < 1.0 && std::abs(zz / Z) < 0.5) )
-          {
-            return indexListT({ -1 });
-          }
-      }
-    else if(boxType == BoxType::capsule)
-      {
-        double maxXY = std::max(X, Y);
-        double pm = -Z / 2.0 + maxXY / 2.0, pp = Z / 2.0 - maxXY / 2.0;
-
-        if( !(((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y)) < 1.0 && zz < pm && zz > pp) || //main cylinder
-              (4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y) + 4 * (zz - pm) * (zz - pm) / (maxXY * maxXY)) < 1.0 ||
-              (4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y) + 4 * (zz - pp) * (zz - pp) / (maxXY * maxXY)) < 1.0))
-          {
-            return indexListT({ -1 });
-          }
-      }
-
     // We use a 3x3x3 collision grid
     // This requires each bin to be 1x times the size of the largest particle
 
@@ -189,32 +164,23 @@ public:
                     {
                       std::cout << "panic" << std::endl;
                     }
+                  
+                  Particle pj = particles[*it];
 
-                    Particle pj = particles[*it];
-
-                    double dx, dy, dz;
-
-                    if(boxType == BoxType::periodicBox)
-                      {
-                        dx = cyclicDistance(pj.x, x, X);
-                        dy = cyclicDistance(pj.y, y, Y);
-                        dz = cyclicDistance(pj.z, z, Z);
-                        }
-                    else
-                      {
-                        dx = std::abs(pj.x - x);
-                        dy = std::abs(pj.y - y);
-                        dz = std::abs(pj.z - z);
-                      }
-
-                    double rsq = dx * dx + dy * dy + dz * dz;
-  
-                    if(rsq < (reacs.bam[type].radius + reacs.bam[pj.type].radius) * (reacs.bam[type].radius + reacs.bam[pj.type].radius))
-                      {
-                        indexList.push_back(*it);
-                        test[*it] = idxx;
-                        //indexList.insert(indexList.end(), binit->second.begin(), binit->second.end());
-                      }
+                  double dx, dy, dz;
+                  
+                  dx = std::abs(pj.x - x);
+                  dy = std::abs(pj.y - y);
+                  dz = std::abs(pj.z - z);
+                  
+                  double rsq = dx * dx + dy * dy + dz * dz;
+                  
+                  if(rsq < (reacs.bam[type].radius + reacs.bam[pj.type].radius) * (reacs.bam[type].radius + reacs.bam[pj.type].radius))
+                    {
+                      indexList.push_back(*it);
+                      test[*it] = idxx;
+                      //indexList.insert(indexList.end(), binit->second.begin(), binit->second.end());
+                    }
                 }
               }
           }
@@ -238,12 +204,17 @@ public:
         double dist = sqrt(dist2);
         double R = reacs.bam[particle.type].radius;
         double L = X / 2.0;
+        double cx, cy, cz;
+
+        particle.fx = 0;
+        particle.fy = 0;
+        particle.fz = 0;
 
         double fval, rval;
         if (dist > L) {
-          cx = cx / dist;
-          cy = cy / dist;
-          cz = cz / dist;
+          cx = (particle.x - X / 2.0) / dist;
+          cy = (particle.y - Y / 2.0) / dist;
+          cz = (particle.z - Z / 2.0) / dist;
           rval = fabs(dist - L);
           fval = - (exp1) * k1;
           fval *= pow(rval, exp1 - 1);
@@ -256,39 +227,43 @@ public:
           particle.fz = 0.0;
         }
 
-        if (dist > (X / 2.0 - R)) {
-          cx = cx / dist;
-          cy = cy / dist;
-          cz = cz / dist;
+        /*if (dist > (L - R)) {
+          cx = (particle.x - X / 2.0) / dist;
+          cy = (particle.y - Y / 2.0) / dist;
+          cz = (particle.z - Z / 2.0) / dist;
           rval = fabs(dist - (L-R));
           fval = - (exp2) * k2;
           fval *= pow(rval, exp2-1);
-          particle.fx += fval * cx;
-          particle.fy += fval * cy;
-          particle.fz += fval * cz;
+          particle.fx -= fval * cx;
+          particle.fy -= fval * cy;
+          particle.fz -= fval * cz;
         } else {
           particle.fx += 0.0;
           particle.fy += 0.0;
           particle.fz += 0.0;
-        }
+          }*/
+
+        /*std::cout << particle.str() << std::endl;
+        std::cout << "dist " << dist << std::endl;
+        std::cout << std::endl;*/
       }
 
     for(auto binit = bins.begin(); binit != bins.end(); binit++)
       {
         for(auto it = binit->second.begin(); it != binit->second.end(); it++)
           {
-            for(auto it2 = it + 1; it2 != binit->second.end(); it++)
+            for(auto it2 = std::next(it); it2 != binit->second.end(); it2++)
               {
-                //Particle &particle1, &particle2 = it2->second;
+                Particle &particle1 = particles[*it], &particle2 = particles[*it2];
 
                 // This adds the incremental bit of force between these two particles
-                double dx = it2->second.x - it->second.x,
-                  dy = it2->second.y - it->second.y,
-                  dz = it2->second.z - it->second.z;
+                double dx = particle1.x - particle2.x,
+                  dy = particle1.y - particle2.y,
+                  dz = particle1.z - particle2.z;
 
                 double r2 = sqrt(dx * dx + dy * dy + dz * dz);
-                double sigma = reacs.bam[it->second.type].sigma + reacs.bam[it2->second.type].sigma;
-                double eps = sqrt(reacs.bam[it->second.type].eps * reacs.bam[it2->second.type].eps);
+                double sigma = reacs.bam[particle1.type].radius + reacs.bam[particle2.type].radius;
+                double eps = sqrt(reacs.bam[particle1.type].eps * reacs.bam[particle2.type].eps);
                 double ll = 1.0;
                 double rc2 = pow(3.0*sigma,2);
 
@@ -296,15 +271,13 @@ public:
 
                 double f = 24.0 * eps *(2.0 * pow(sigma,12)/pow(r2,7) - ll * pow(sigma,6)/pow(r2,4)) - ljrcut;
 
-                it->second.fx -= f * dx;
-                it->second.fy -= f * dy;
-                it->second.fz -= f * dz;
+                particle1.fx += f * dx;
+                particle1.fy += f * dy;
+                particle1.fz += f * dz;
 
-                it2->second.fx += f * dx;
-                it2->second.fy += f * dy;
-                it2->second.fz += f * dz;
-
-                //incrementForce(it->second, it2->second);
+                particle2.fx -= f * dx;
+                particle2.fy -= f * dy;
+                particle2.fz -= f * dz;
               }
           }
       }
@@ -332,7 +305,7 @@ public:
     p.z = z;
 
     //std::cout << "inserting particle " << 
-    insertParticle(p.x, p.y, p.z, p.type, id);
+    insertParticle(p.x, p.y, p.z, p.px, p.py, p.pz, p.type, id);
     // << std::endl;
   }
 

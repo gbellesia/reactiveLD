@@ -21,6 +21,7 @@
 
 int main(int argc, char **argv) {
   double X = 10000, Y = 10000, Z = 10000;
+  double kb = 1, T = 1;
 
   //int N = 10;
 
@@ -85,79 +86,21 @@ int main(int argc, char **argv) {
   json_t *atomsDistributionArray = json_object_get(root, "atomsDist");
   json_t *mArray = json_object_get(root, "monatomic");
   json_t *Xj = json_object_get(root, "X");
-  json_t *Yj = json_object_get(root, "Y");
-  json_t *Zj = json_object_get(root, "Z");
   json_t *stepsj = json_object_get(root, "steps");
   json_t *printStepsj = json_object_get(root, "printSteps");
   json_t *dtj = json_object_get(root, "dt");
+  json_t *kbj = json_object_get(root, "kb");
+  json_t *Tj = json_object_get(root, "T");
   json_t *bArray = json_object_get(root, "binary");
   json_t *aTypes = json_object_get(root, "types");
-  json_t *type = json_object_get(root, "simType");
 
-  BoxType boxType;
-
-  if(type == NULL || !json_is_string(type))
-    {
-      boxType = BoxType::periodicBox;
-    }
-  else
-    {
-      if(strcmp(json_string_value(type), "ellipsoid") == 0)
-        {
-          boxType = BoxType::ellipsoid;
-        }
-      if(strcmp(json_string_value(type), "capsule") == 0)
-        {
-          boxType = BoxType::capsule;
-        }
-      else if(strcmp(json_string_value(type), "cylinder") == 0)
-        {
-          boxType = BoxType::cylinder;
-        }
-      else if(strcmp(json_string_value(type), "boxWithWalls") == 0)
-        {
-          boxType = BoxType::boxWithWalls;
-        }
-      else if(strcmp(json_string_value(type), "periodicBox") == 0)
-        {
-          boxType = BoxType::periodicBox;
-        }
-      else
-        {
-          std::cout << "simType must be defined as either \"ellipsoid\", or \"capsule\" or \"cylinder\", or \"boxWithWalls\", or \"periodicBox\"" << std::endl;
-      
-          if(Xj != NULL)
-            json_decref(root);
-      
-          return 1;
-        }
-    }
+  BoxType boxType = BoxType::ellipsoid;
 
   if(Xj == NULL || !json_is_number(Xj))
     {
       std::cout << "X must be a number" << std::endl;
       
       if(Xj != NULL)
-        json_decref(root);
-      
-      return 1;
-    }
-
-  if(Yj == NULL || !json_is_number(Yj))
-    {
-      std::cout << "Y must be a number" << std::endl;
-      
-      if(Yj != NULL)
-        json_decref(root);
-      
-      return 1;
-    }
-
-  if(Zj == NULL || !json_is_number(Zj))
-    {
-      std::cout << "Z must be a number" << std::endl;
-      
-      if(Zj != NULL)
         json_decref(root);
       
       return 1;
@@ -192,14 +135,37 @@ int main(int argc, char **argv) {
       
       return 1;
     }
+  
+  if(kbj == NULL || !json_is_number(kbj))
+    {
+      std::cout << "kb must be a number" << std::endl;
+      
+      if(dtj != NULL)
+        json_decref(root);
+      
+      return 1;
+    }
+  
+  if(Tj == NULL || !json_is_number(Tj))
+    {
+      std::cout << "T must be a number" << std::endl;
+      
+      if(dtj != NULL)
+        json_decref(root);
+      
+      return 1;
+    }
 
   X = json_number_value(Xj);
-  Y = json_number_value(Yj);
-  Z = json_number_value(Zj);
+  Y = json_number_value(Xj);
+  Z = json_number_value(Xj);
   steps = json_integer_value(stepsj);
   printSteps = json_integer_value(printStepsj);
   dt = json_number_value(dtj);
+  kb = json_number_value(kbj);
+  T = json_number_value(Tj);
 
+  // Parse the binary reactions
   for(int i = 0; i < (int)json_array_size(bArray); i++)
     {
       json_t *r = json_array_get(bArray, i);
@@ -213,7 +179,7 @@ int main(int argc, char **argv) {
       json_t *Aj = json_object_get(r, "A");
       if(Aj == NULL || !json_is_integer(Aj))
         {
-          std::cout << "Found a non-number identifier for (A) atoms" << std::endl;
+          std::cout << "In binary reaction, \"A\" must be a species type (integer)" << std::endl;
 
           if(Aj != NULL)
             json_decref(root);
@@ -224,7 +190,7 @@ int main(int argc, char **argv) {
       json_t *Bj = json_object_get(r, "B");
       if(Bj == NULL || !json_is_integer(Bj))
         {
-          std::cout << "Found a non-number identifier for B-atoms" << std::endl;
+          std::cout << "In binary reaction, \"B\" must be a species type (integer)" << std::endl;
 
           if(Bj != NULL)
             json_decref(root);
@@ -235,7 +201,7 @@ int main(int argc, char **argv) {
       json_t *Cj = json_object_get(r, "C");
       if(Cj != NULL && !json_is_integer(Cj))
         {
-          std::cout << "Found a non-number identifier for (C) atoms" << std::endl;
+          std::cout << "In binary reaction, \"C\" must be a species type (integer)" << std::endl;
 
           json_decref(root);
 
@@ -245,7 +211,7 @@ int main(int argc, char **argv) {
       json_t *Dj = json_object_get(r, "D");
       if(Dj != NULL && !json_is_integer(Dj))
         {
-          std::cout << "Found a non-number identifier for (D) atoms" << std::endl;
+          std::cout << "In binary reaction, \"D\" must be a species type (integer)" << std::endl;
 
           json_decref(root);
 
@@ -273,6 +239,7 @@ int main(int argc, char **argv) {
       reacs.brm.insert(Reactions::brmT::value_type(mpp(A, B), BinaryReaction(A, B, C, D, k)));
     }
 
+  // Parse monatomic reactions
   for(int i = 0; i < (int)json_array_size(mArray); i++)
     {
       json_t *r = json_array_get(mArray, i);
@@ -286,7 +253,7 @@ int main(int argc, char **argv) {
       json_t *Aj = json_object_get(r, "A");
       if(Aj != NULL && !json_is_integer(Aj))
         {
-          std::cout << "Found a non-number identifier for (A) atoms" << std::endl;
+          std::cout << "In binary reaction, \"A\" must be a species type (integer)" << std::endl;
 
           json_decref(root);
 
@@ -296,7 +263,7 @@ int main(int argc, char **argv) {
       json_t *Bj = json_object_get(r, "B");
       if(Bj != NULL && !json_is_integer(Bj))
         {
-          std::cout << "Found a non-number identifier for B-atoms" << std::endl;
+          std::cout << "In binary reaction, \"B\" must be a species type (integer)" << std::endl;
 
           json_decref(root);
 
@@ -306,7 +273,7 @@ int main(int argc, char **argv) {
       json_t *Cj = json_object_get(r, "C");
       if(Cj != NULL && !json_is_integer(Cj))
         {
-          std::cout << "Found a non-number identifier for (C) atoms" << std::endl;
+          std::cout << "In binary reaction, \"C\" must be a species type (integer)" << std::endl;
 
           json_decref(root);
 
@@ -333,6 +300,7 @@ int main(int argc, char **argv) {
       reacs.mrm.insert(Reactions::mrmT::value_type(A, MonatomicReaction(A, B, C, k)));
     }
 
+  // Parse the atom types
   for(int i = 0; i < (int)json_array_size(aTypes); i++)
     {
       json_t *r = json_array_get(aTypes, i);
@@ -357,7 +325,29 @@ int main(int argc, char **argv) {
       json_t *radiusJ = json_object_get(r, "radius");
       if(radiusJ == NULL || !json_is_number(radiusJ))
         {
-          std::cout << "Found a non-real identifier for reaction rates" << std::endl;
+          std::cout << "\"radius\" must be a real number" << std::endl;
+
+          if(radiusJ != NULL)
+            json_decref(radiusJ);
+
+          return 1;
+        }
+
+      json_t *massJ = json_object_get(r, "mass");
+      if(massJ == NULL || !json_is_number(massJ))
+        {
+          std::cout << "\"mass\" must be a real number" << std::endl;
+
+          if(radiusJ != NULL)
+            json_decref(radiusJ);
+
+          return 1;
+        }
+
+      json_t *epsJ = json_object_get(r, "eps");
+      if(epsJ == NULL || !json_is_number(epsJ))
+        {
+          std::cout << "\"eps\" (eps used to compute Lennard-Jones eps of particle pair [epslj = sqrt(epsi1 * eps2])" << std::endl;
 
           if(radiusJ != NULL)
             json_decref(radiusJ);
@@ -369,7 +359,7 @@ int main(int argc, char **argv) {
 
       if(Dj == NULL || !json_is_number(Dj))
         {
-          std::cout << "Found a non-number identifier for B-atoms" << std::endl;
+          std::cout << "\"D\" (diffusion coeffcient) must be a real number" << std::endl;
 
           if(Dj != NULL)
             json_decref(Dj);
@@ -380,8 +370,10 @@ int main(int argc, char **argv) {
       int type = json_integer_value(typeJ);
       double radius = json_number_value(radiusJ);
       double D = json_number_value(Dj);
+      double mass = json_number_value(massJ);
+      double eps = json_number_value(epsJ);
 
-      reacs.bam[type] = BrownianAtom(type, radius, D);
+      reacs.bam[type] = BrownianAtom(type, radius, D, mass, eps);
     }
 
   double maxR = reacs.init(dt);
@@ -457,7 +449,7 @@ int main(int argc, char **argv) {
       
           int type = json_integer_value(typej);
 
-          parts.insertParticle(x, y, z, type);
+          parts.insertParticle(x, y, z, 0.0, 0.0, 0.0, type);
         }
     }
 
@@ -509,9 +501,12 @@ int main(int argc, char **argv) {
 
                   if(indexList.size() < 1)
                     {
-                      parts.insertParticle(x, y, z, type);
+                      if(((x - X / 2.0) * (x - X / 2.0) + (y - X / 2.0) * (y - X / 2.0) + (z - X / 2.0) * (z - X / 2.0)) < X * X / 4.0)
+                        {
+                          parts.insertParticle(x, y, z, 0.0, 0.0, 0.0, type);
 
-                      break;
+                          break;
+                        }
                     }
                 }
 
@@ -536,6 +531,10 @@ int main(int argc, char **argv) {
 
   std::cout << "Reactive Brownian Dynamics starts ..." << std::endl;
 
+  double nx, ny, nz,
+    xx, yy, zz;
+
+  double momentum;
   for(int s = 0; s < steps; s++)
     {
       if (!(s%10)) std::cout << s  << " " << dt*s  << " " << parts.particles.size() << std::endl;
@@ -564,15 +563,20 @@ int main(int argc, char **argv) {
               output << "go spurs" << std::endl;
             }
 
+          double T2=0.0;
           for(auto it = parts.particles.begin(); it != parts.particles.end(); it++)
             {
               Particle &p = it->second;
               
+              T2 += (p.px * p.px + p.py * p.py + p.pz * p.pz) / (2.0 * reacs.bam[p.type].mass);
               if(outputType.compare("pizza") == 0)
                 output << std::setprecision(17) << it->first << " " << p.type << " " << p.x << " " << p.y << " " << p.z << std::endl;
               else
                 output << std::setprecision(17) << p.type << " " << p.x << " " << p.y << " " << p.z << std::endl;
             }
+
+          T2 = T2 * 2.0 / (3.0 * parts.particles.size() * kb);
+          std::cout << s * dt << " " << T2 << std::endl;
         }
 
       std::vector<int> oldParticles;
@@ -603,35 +607,31 @@ int main(int argc, char **argv) {
           //If there is no Btype, better be no Ctype. This is a destruction reac!
           if(Btype > 0)
             {
-              int tries = 0;
-
               nx = X * uniform(generator);
               ny = Y * uniform(generator);
               nz = Z * uniform(generator);
               
-              parts.insertParticle(nx, ny, nz, vx, vy, vz, Btype);
+              parts.insertParticle(nx, ny, nz, 0.0, 0.0, 0.0, Btype);
               //Check if it will be possible to insert a C atom
               if(Ctype > 0)
-                    {
-                      double r = reacs.pseps[mpp(Btype, Ctype)].sample(uniform(generator));
-
-                      //std::cout << r << std::endl;
+                {
+                  double r = reacs.pseps[mpp(Btype, Ctype)].sample(uniform(generator));
                   
-                      double theta = pi * uniform(generator);
-                      double phi = 2 * pi * uniform(generator);
+                  //std::cout << r << std::endl;
                   
-                      initialized = true; // We initialized xx, yy, zz
-                      xx = nx + r * sin(theta) * cos(phi);
-                      yy = ny + r * sin(theta) * sin(phi);
-                      zz = nz + r * cos(theta);
-
-                      parts.insertParticle(xx, yy, zz, vxx, vyy, vzz, Ctype);
-                    }
+                  double theta = pi * uniform(generator);
+                  double phi = 2 * pi * uniform(generator);
+                  
+                  xx = nx + r * sin(theta) * cos(phi);
+                  yy = ny + r * sin(theta) * sin(phi);
+                  zz = nz + r * cos(theta);
+                  
+                  parts.insertParticle(xx, yy, zz, 0.0, 0.0, 0.0, Ctype);
                 }
             }
         }
-
-      parts.computeForces();
+      
+      parts.computeForces(reacs);
 
       for(auto it = oldParticles.begin(); it != oldParticles.end(); it++)
         {
@@ -641,17 +641,25 @@ int main(int argc, char **argv) {
 
           Particle &p = parts.particles[pid];
 
-          double nx = 2 * p.x - p.xold + (p.fx - (kb * T / reacs.bam[p.type].D) * reacs.bam[p.type].mass * p.vx + sqrt(2 * (kb * T / reacs.bam[p.type].D) * T * kb * reacs.bam[p.type].mass) * gaussian(generator)) / (reacs.bam[p.type].mass) * dt * dt;
-          double ny = 2 * p.y - p.yold + (p.fy - (kb * T / reacs.bam[p.type].D) * reacs.bam[p.type].mass * p.vy + sqrt(2 * (kb * T / reacs.bam[p.type].D) * T * kb * reacs.bam[p.type].mass) * gaussian(generator)) / (reacs.bam[p.type].mass) * dt * dt;
-          double nz = 2 * p.z - p.zold + (p.fz - (kb * T / reacs.bam[p.type].D) * reacs.bam[p.type].mass * p.vz + sqrt(2 * (kb * T / reacs.bam[p.type].D) * T * kb * reacs.bam[p.type].mass) * gaussian(generator)) / (reacs.bam[p.type].mass) * dt * dt;
+          double gamma = kb * T / reacs.bam[p.type].D;
+          double e1 = exp(-dt * gamma),
+            e2 = exp(-dt * gamma / 2.0);
 
-          p.xold = p.x;
-          p.yold = p.y;
-          p.zold = p.z;
+          double nx, ny, nz;
 
-          p.x = nx;
-          p.y = ny;
-          p.z = nz;
+          double pxOld = p.px;
+          p.px = p.px * e1 + (dt * p.fx + sqrt(2 * gamma * kb * T * reacs.bam[p.type].mass * dt) * gaussian(generator)) * e2;
+          nx = p.x + (dt / (2.0 * reacs.bam[p.type].mass)) * (p.px + pxOld);
+
+          double pyOld = p.py;
+          p.py = p.py * e1 + (dt * p.fy + sqrt(2 * gamma * kb * T * reacs.bam[p.type].mass * dt) * gaussian(generator)) * e2;
+          ny = p.y + (dt / (2.0 * reacs.bam[p.type].mass)) * (p.py + pyOld);
+
+          double pzOld = p.pz;
+          p.pz = p.pz * e1 + (dt * p.fz + sqrt(2 * gamma * kb * T * reacs.bam[p.type].mass * dt) * gaussian(generator)) * e2;
+          nz = p.z + (dt / (2.0 * reacs.bam[p.type].mass)) * (p.pz + pzOld);
+
+          parts.move(pid, nx, ny, nz);
         }
 
       for(auto it = oldParticles.begin(); it != oldParticles.end(); it++)
@@ -701,31 +709,40 @@ int main(int argc, char **argv) {
                     }
                 }
 
-              momentum = reacs.bam[p.type].mass * sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz);
+              momentum = sqrt(p.px * p.px + p.py * p.py + p.pz * p.pz);
 
-              double vx = 0, vy = 0, vz = 0,
-                vxx = 0, vyy = 0, vzz = 0;
+              double px = 0, py = 0, pz = 0,
+                pxx = 0, pyy = 0, pzz = 0;
 
               if(numProducts == 1)
                 {
                   double theta = pi * uniform(generator);
                   double phi = 2 * pi * uniform(generator);
-                  
-                  vx = (momentum / reacs.bam[Btype].mass) * sin(theta) * cos(phi);
-                  vy = (momentum / reacs.bam[Btype].mass) * sin(theta) * sin(phi);
-                  vz = (momentum / reacs.bam[Btype].mass) * cos(theta);
+                  double pmag = sqrt(energy * reacs.bam[Ctype].mass * 2);
+
+                  px = pmag * sin(theta) * cos(phi);
+                  py = pmag * sin(theta) * sin(phi);
+                  pz = pmag * cos(theta);
                 }
               else
                 {
+                  double theta = pi * uniform(generator);
+                  double phi = 2 * pi * uniform(generator);
+
                   double portion = uniform(generator);
+                  double pmag1 = sqrt((1 - portion) * energy * reacs.bam[Btype].mass * 2);
+                  double pmag2 = sqrt(portion * energy * reacs.bam[Ctype].mass * 2);
+                      
+                  px = pmag1 * sin(theta) * cos(phi);
+                  py = pmag1 * sin(theta) * sin(phi);
+                  pz = pmag1 * cos(theta);
 
-                  vx = (1 - portion) * (momentum / reacs.bam[Btype].mass) * sin(theta) * cos(phi);
-                  vy = (1 - portion) * (momentum / reacs.bam[Btype].mass) * sin(theta) * sin(phi);
-                  vz = (1 - portion) * (momentum / reacs.bam[Btype].mass) * cos(theta);
-
-                  vxx = portion * (momentum / reacs.bam[Ctype].mass) * sin(theta) * cos(phi);
-                  vxy = portion * (momentum / reacs.bam[Ctype].mass) * sin(theta) * sin(phi);
-                  vxz = portion * (momentum / reacs.bam[Ctype].mass) * cos(theta);
+                  theta = pi * uniform(generator);
+                  phi = 2 * pi * uniform(generator);
+                      
+                  pxx = pmag2 * sin(theta) * cos(phi);
+                  pyy = pmag2 * sin(theta) * sin(phi);
+                  pzz = pmag2 * cos(theta);
                 }
 
               double xx, yy, zz;
@@ -733,13 +750,13 @@ int main(int argc, char **argv) {
               // Get rid of the reacted particle
               deleted.insert(pid);
 
-              //std::cout << "Monatomic reaction" << pid << std::endl;
+              std::cout << "Monatomic reaction" << pid << std::endl;
               parts.deleteParticle(pid);
                   
               // Insert the two products
               if(Btype > 0)
                 {
-                  parts.insertParticle(nx, ny, nz, vx, vy, vz, Btype);
+                  parts.insertParticle(nx, ny, nz, px, py, pz, Btype);
                 }
               
               if(Ctype > 0)
@@ -751,18 +768,21 @@ int main(int argc, char **argv) {
                   double theta = pi * uniform(generator);
                   double phi = 2 * pi * uniform(generator);
                   
-                  initialized = true; // We initialized xx, yy, zz
                   xx = nx + r * sin(theta) * cos(phi);
                   yy = ny + r * sin(theta) * sin(phi);
                   zz = nz + r * cos(theta);
 
-                  parts.insertParticle(xx, yy, zz, vxx, vyy, vzz, Ctype);
+                  parts.insertParticle(xx, yy, zz, pxx, pyy, pzz, Ctype);
                 }
             }
           else // Handle all other binary reactions
             {
+              bool reacted = false;
               for(auto otherParticleIt = touching.begin(); otherParticleIt != touching.end(); otherParticleIt++)
                 {
+                  if(reacted)
+                    break;
+
                   // Remember that findTouching call way above? Let's get the atom id out of that
                   int pjd = *otherParticleIt;
 
@@ -786,6 +806,8 @@ int main(int argc, char **argv) {
                       continue;
                     }
 
+                  reacted = true;
+
                   BinaryReaction reaction = it->second;
 
                   double nx = p2.x, ny = p2.y, nz = p2.z;
@@ -805,32 +827,41 @@ int main(int argc, char **argv) {
                         }
                     }
 
-                  momentum = reacs.bam[p.type].mass * sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz) +
-                    reacs.bam[p2.type].mass * sqrt(p2.vx * p2.vx + p2.vy * p2.vy + p2.vz * p2.vz);
+                  double energy = (p.px * p.px + p.py * p.py + p.pz * p.pz) / (2.0 * reacs.bam[p.type].mass) +
+                    (p2.px * p2.px + p2.py * p2.py + p2.pz * p2.pz) / (2.0 * reacs.bam[p.type].mass);
 
-                  double vx = 0, vy = 0, vz = 0,
-                    vxx = 0, vyy = 0, vzz = 0;
+                  double px = 0, py = 0, pz = 0,
+                    pxx = 0, pyy = 0, pzz = 0;
 
                   if(numProducts == 1)
                     {
                       double theta = pi * uniform(generator);
                       double phi = 2 * pi * uniform(generator);
-                  
-                      vx = (momentum / reacs.bam[Ctype].mass) * sin(theta) * cos(phi);
-                      vy = (momentum / reacs.bam[Ctype].mass) * sin(theta) * sin(phi);
-                      vz = (momentum / reacs.bam[Ctype].mass) * cos(theta);
+                      double pmag = sqrt(energy * reacs.bam[Ctype].mass * 2);
+
+                      px = pmag * sin(theta) * cos(phi);
+                      py = pmag * sin(theta) * sin(phi);
+                      pz = pmag * cos(theta);
                     }
                   else
                     {
+                      double theta = pi * uniform(generator);
+                      double phi = 2 * pi * uniform(generator);
+
                       double portion = uniform(generator);
+                      double pmag1 = sqrt((1 - portion) * energy * reacs.bam[Ctype].mass * 2);
+                      double pmag2 = sqrt(portion * energy * reacs.bam[Dtype].mass * 2);
                       
-                      vx = (1 - portion) * (momentum / reacs.bam[Ctype].mass) * sin(theta) * cos(phi);
-                      vy = (1 - portion) * (momentum / reacs.bam[Ctype].mass) * sin(theta) * sin(phi);
-                      vz = (1 - portion) * (momentum / reacs.bam[Ctype].mass) * cos(theta);
+                      px = pmag1 * sin(theta) * cos(phi);
+                      py = pmag1 * sin(theta) * sin(phi);
+                      pz = pmag1 * cos(theta);
+
+                      theta = pi * uniform(generator);
+                      phi = 2 * pi * uniform(generator);
                       
-                      vxx = portion * (momentum / reacs.bam[Dtype].mass) * sin(theta) * cos(phi);
-                      vyy = portion * (momentum / reacs.bam[Dtype].mass) * sin(theta) * sin(phi);
-                      vzz = portion * (momentum / reacs.bam[Dtype].mass) * cos(theta);
+                      pxx = pmag2 * sin(theta) * cos(phi);
+                      pyy = pmag2 * sin(theta) * sin(phi);
+                      pzz = pmag2 * cos(theta);
                     }
 
                   double xx, yy, zz;
@@ -840,13 +871,13 @@ int main(int argc, char **argv) {
                   // Get rid of the reacted particlezz
                   deleted.insert(pid);
                   deleted.insert(pjd);
-                  
+
                   parts.deleteParticle(pid);
                   parts.deleteParticle(pjd);
 
                   if(Ctype > 0)
                     {
-                      parts.insertParticle(nx, ny, nz, vx, vy, vz, Ctype);
+                      parts.insertParticle(nx, ny, nz, px, py, pz, Ctype);
                       
                       //Check if it will be possible to insert a D atom
                       if(Dtype > 0)
@@ -858,12 +889,11 @@ int main(int argc, char **argv) {
                           double theta = pi * uniform(generator);
                           double phi = 2 * pi * uniform(generator);
                           
-                          initialized = true; // We initialized xx, yy, zz
                           xx = nx + r * sin(theta) * cos(phi);
                           yy = ny + r * sin(theta) * sin(phi);
                           zz = nz + r * cos(theta);
 
-                          parts.insertParticle(xx, yy, zz, vxx, vyy, vzz, Dtype);
+                          parts.insertParticle(xx, yy, zz, pxx, pyy, pzz, Dtype);
                         }
                     }
                 }
