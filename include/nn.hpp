@@ -174,7 +174,7 @@ public:
 
     for(int i = 0; i < (int)ox.size(); i++)
       {
-        int idxx = idx(int(x / dX) + ox[i], int(y / dY) + oy[i], int(z / dZ) + oz[i]);
+        int idxx = idx(int(x / dX) + ox[i] + Nx, int(y / dY) + oy[i] + Ny, int(z / dZ) + oz[i] + Nz);
         visted.push_back(idxx);
 
         auto binit = bins.find(idxx);
