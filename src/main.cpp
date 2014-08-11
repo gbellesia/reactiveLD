@@ -905,14 +905,14 @@ int main(int argc, char **argv) {
 
               int Ctype = reaction.C;
               int Dtype = reaction.D;
+
+              int tries = 0;
+              double xx, yy, zz;
+              bool initialized = false; // This is just for sanity's sake. It's possible we used xx, yy, and zz unitialized. Let's make sure this doesn't happend
               //If there is no Ctype, better be no Dtype. This is a destruction reac!
+
               if(Ctype > 0)
                 {
-                  int tries = 0;
-
-                  double xx, yy, zz;
-                  bool initialized = false; // This is just for sanity's sake. It's possible we used xx, yy, and zz unitialized. Let's make sure this doesn't happend
-
                   for(tries = 0; tries < maxTries; tries++)
                     {
                       //Check if it will be possible to insert a C atom
@@ -965,40 +965,40 @@ int main(int argc, char **argv) {
                       // If we got this far, any necessary reaction products have been successfully inserted
                       break;
                     }
+                }
 
-                  // If we failed to insert the new atoms, reject the move and go on
-                  if(tries == maxTries)
-                    {
-                      //std::cout << "things aren't fitting" << std::endl;
-
-                      continue;
-                    }
-                  else
-                    { 
-                      // Get rid of the reacted particle
-                      deleted.insert(pid);
-                      deleted.insert(pjd);
-
-                      //std::cout << "Monatomic reaction" << pid << std::endl;
-                      parts.deleteParticle(pid);
-                      parts.deleteParticle(pjd);
+              // If we failed to insert the new atoms, reject the move and go on
+              if(tries == maxTries)
+                {
+                  //std::cout << "things aren't fitting" << std::endl;
                   
-                      // Insert the two products
-                      if(Ctype > 0)
+                  continue;
+                }
+              else
+                { 
+                  // Get rid of the reacted particle
+                  deleted.insert(pid);
+                  deleted.insert(pjd);
+                  
+                  //std::cout << "Monatomic reaction" << pid << std::endl;
+                  parts.deleteParticle(pid);
+                  parts.deleteParticle(pjd);
+                  
+                  // Insert the two products
+                  if(Ctype > 0)
+                    {
+                      parts.insertParticle(nx, ny, nz, Ctype);
+                      
+                      if(Dtype > 0)
                         {
-                          parts.insertParticle(nx, ny, nz, Ctype);
-
-                          if(Dtype > 0)
+                          if(initialized == false)
                             {
-                              if(initialized == false)
-                                {
-                                  std::cout << "xx, yy, and zz are not initialized!" << std::endl;
-                                  exit(-1);
-                                }
-                              else
-                                {
-                                  parts.insertParticle(xx, yy, zz, Dtype);
-                                }
+                              std::cout << "xx, yy, and zz are not initialized!" << std::endl;
+                              exit(-1);
+                            }
+                          else
+                            {
+                              parts.insertParticle(xx, yy, zz, Dtype);
                             }
                         }
                     }
