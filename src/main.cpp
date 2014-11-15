@@ -95,41 +95,42 @@ int main(int argc, char **argv) {
   json_t *type = json_object_get(root, "simType");
 
   BoxType boxType;
+  bool twoD = false;
 
   if(type == NULL || !json_is_string(type))
     {
       boxType = BoxType::periodicBox;
     }
-      else if(strcmp(json_string_value(type), "ellipsoid") == 0)
-        {
-          boxType = BoxType::ellipsoid;
-        }
-      else if(strcmp(json_string_value(type), "capsule") == 0)
-        {
-          boxType = BoxType::capsule;
-        }
-      else if(strcmp(json_string_value(type), "cylinder") == 0)
-        {
-          boxType = BoxType::cylinder;
-        }
-      else if(strcmp(json_string_value(type), "boxWithWalls") == 0)
-        {
-          boxType = BoxType::boxWithWalls;
-        }
-      else if(strcmp(json_string_value(type), "periodicBox") == 0)
-        {
-          boxType = BoxType::periodicBox;
-        }
-      else
-        {
-          std::cout << "simType must be defined as either \"ellipsoid\", or \"capsule\" or \"cylinder\", or \"boxWithWalls\", or \"periodicBox\"" << std::endl;
+  else if(strcmp(json_string_value(type), "ellipsoid") == 0)
+    {
+      boxType = BoxType::ellipsoid;
+    }
+  else if(strcmp(json_string_value(type), "capsule") == 0)
+    {
+      boxType = BoxType::capsule;
+    }
+  else if(strcmp(json_string_value(type), "cylinder") == 0)
+    {
+      boxType = BoxType::cylinder;
+    }
+  else if(strcmp(json_string_value(type), "boxWithWalls") == 0)
+    {
+      boxType = BoxType::boxWithWalls;
+    }
+  else if(strcmp(json_string_value(type), "periodicBox") == 0)
+    {
+      boxType = BoxType::periodicBox;
+    }
+  else
+    {
+      std::cout << "simType must be defined as either \"ellipsoid\", or \"capsule\" or \"cylinder\", or \"boxWithWalls\", or \"periodicBox\"" << std::endl;
       
-          if(Xj != NULL)
-            json_decref(root);
+      if(Xj != NULL)
+        json_decref(root);
       
-          return 1;
-        }
-
+      return 1;
+    }
+  
   if(Xj == NULL || !json_is_number(Xj))
     {
       std::cout << "X must be a number" << std::endl;
@@ -150,7 +151,13 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-  if(Zj == NULL || !json_is_number(Zj))
+  if(Zj == NULL)
+    {
+      std::cout << "No Z coordinate found. Enforcing 2D mode!" << std::endl;
+      twoD = true;
+    }
+
+  if(!twoD && !json_is_number(Zj))
     {
       std::cout << "Z must be a number" << std::endl;
       
@@ -192,7 +199,7 @@ int main(int argc, char **argv) {
 
   X = json_number_value(Xj);
   Y = json_number_value(Yj);
-  Z = json_number_value(Zj);
+  Z = (twoD) ? 1.0 : json_number_value(Zj);
   steps = json_integer_value(stepsj);
   printSteps = json_integer_value(printStepsj);
   dt = json_number_value(dtj);
@@ -500,7 +507,7 @@ int main(int argc, char **argv) {
                 {
                   double x = X * uniform(generator),
                     y = Y * uniform(generator),
-                    z = Z * uniform(generator);
+                    z = (twoD) ? Z * 0.5 : uniform(generator);
 
                   Particles::indexListT indexList = parts.collide(x, y, z, type);
 
@@ -636,7 +643,7 @@ int main(int argc, char **argv) {
                 {
                   nx = X * uniform(generator);
                   ny = Y * uniform(generator);
-                  nz = Z * uniform(generator);
+                  nz = (twoD) ? Z * 0.5 : Z * uniform(generator);
 
                   //Check if it will be possible to insert a B atom
                   auto touching = parts.collide(nx, ny, nz, Btype);
@@ -660,7 +667,7 @@ int main(int argc, char **argv) {
 
                       //std::cout << r << std::endl;
                   
-                      double theta = pi * uniform(generator);
+                      double theta = (twoD) ? pi / 2.0 : pi * uniform(generator);
                       double phi = 2 * pi * uniform(generator);
                   
                       initialized = true; // We initialized xx, yy, zz
@@ -728,7 +735,7 @@ int main(int argc, char **argv) {
 
           double dx = gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
           double dy = gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
-          double dz = gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
+          double dz = (twoD) ? 0.0 : gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
 
           double nx = p.x + dx, ny = p.y + dy, nz = p.z + dz;
 
@@ -801,7 +808,7 @@ int main(int argc, char **argv) {
 
                           //std::cout << r << std::endl;
                   
-                          double theta = pi * uniform(generator);
+                          double theta = (twoD) ? pi * 0.5 : pi * uniform(generator);
                           double phi = 2 * pi * uniform(generator);
                   
                           initialized = true; // We initialized xx, yy, zz
@@ -940,7 +947,7 @@ int main(int argc, char **argv) {
 
                           //std::cout << r << std::endl;
                   
-                          double theta = pi * uniform(generator);
+                          double theta = (twoD) ? pi * 0.5 : pi * uniform(generator);
                           double phi = 2 * pi * uniform(generator);
                   
                           initialized = true; // We initialized xx, yy, zz
