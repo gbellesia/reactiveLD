@@ -34,6 +34,8 @@ public:
 
   BoxType boxType;
 
+  bool twoD;
+
   Reactions &reacs;
 
   typedef std::vector<int> indexListT;
@@ -54,7 +56,7 @@ public:
     return (x % Nx) * Ny * Nz + (y % Ny) * Nz + (z % Nz);
   }
 
-  Particles(double maxR, double X, double Y, double Z, BoxType boxType, Reactions &reacs) : X(X), Y(Y), Z(Z), boxType(boxType), reacs(reacs)
+  Particles(double maxR, double X, double Y, double Z, BoxType boxType, bool twoD, Reactions &reacs) : X(X), Y(Y), Z(Z), boxType(boxType), twoD(twoD), reacs(reacs)
   {
     Nx = int(X / maxR) + 1;
     Ny = int(Y / maxR) + 1;
@@ -124,7 +126,7 @@ public:
 
     if(boxType != BoxType::periodicBox)
       {
-        if((x - radius) < 0 || (x + radius) > X || (y - radius) < 0 || (y + radius) > Y || (z - radius) < 0 || (z + radius) > Z)
+        if((x - radius) < 0 || (x + radius) > X || (y - radius) < 0 || (y + radius) > Y || (twoD) ? false : ((z - radius) < 0 || (z + radius) > Z))
           {
             return indexListT({ -1 });
           }
@@ -132,6 +134,12 @@ public:
 
     if(boxType == BoxType::ellipsoid)
       {
+        if(twoD)
+          {
+            std::cout << "2d doesn't support ellipsoid containers yet" << std::endl;
+            exit(-1);
+          }
+
         if((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y) + 4 * zz * zz / (Z * Z)) >= 1.0)
           {
             return indexListT({ -1 });
@@ -139,6 +147,12 @@ public:
       }
     else if(boxType == BoxType::cylinder)
       {
+        if(twoD)
+          {
+            std::cout << "2d doesn't support cylinder-shaped containers yet" << std::endl;
+            exit(-1);
+          }
+
         if( !((4 * xx * xx / (X * X) + 4 * yy * yy / (Y * Y)) < 1.0 && std::abs(zz / Z) < 0.5) )
           {
             return indexListT({ -1 });
@@ -146,6 +160,12 @@ public:
       }
     else if(boxType == BoxType::capsule)
       {
+        if(twoD)
+          {
+            std::cout << "2d doesn't support capsule-shaped containers yet" << std::endl;
+            exit(-1);
+          }
+
         double maxXY = std::max(X, Y);
         double pm = -Z / 2.0 + maxXY / 2.0, pp = Z / 2.0 - maxXY / 2.0;
 
@@ -186,7 +206,7 @@ public:
                 {
                   if(test.find(*it) != test.end())
                     {
-                      std::cout << "panic" << std::endl;
+                      //std::cout << "panic" << std::endl;
                     }
 
                     Particle pj = particles[*it];

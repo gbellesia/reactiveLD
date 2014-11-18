@@ -397,7 +397,7 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-  Particles parts(maxR, X, Y, Z, boxType, reacs);
+  Particles parts(maxR, X, Y, Z, boxType, twoD, reacs);
 
   if(atomsArray != NULL)
     {
@@ -507,7 +507,7 @@ int main(int argc, char **argv) {
                 {
                   double x = X * uniform(generator),
                     y = Y * uniform(generator),
-                    z = (twoD) ? Z * 0.5 : uniform(generator);
+                    z = (twoD) ? Z * 0.5 : Z * uniform(generator);
 
                   Particles::indexListT indexList = parts.collide(x, y, z, type);
 
