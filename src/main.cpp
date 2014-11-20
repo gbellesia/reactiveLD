@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
 
   X = json_number_value(Xj);
   Y = json_number_value(Yj);
-  Z = (twoD) ? 1.0 : json_number_value(Zj);
+  Z = (twoD) ? X : json_number_value(Zj);
   steps = json_integer_value(stepsj);
   printSteps = json_integer_value(printStepsj);
   dt = json_number_value(dtj);
