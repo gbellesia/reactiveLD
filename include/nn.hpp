@@ -123,10 +123,11 @@ public:
     xx = std::abs(adjust(x, X) - X / 2.0) + radius;
     yy = std::abs(adjust(y, Y) - Y / 2.0) + radius;
     zz = std::abs(adjust(z, Z) - Z / 2.0) + radius;
-
+    //
+    //std::cout << twoD << std::endl;
     if(boxType != BoxType::periodicBox)
       {
-        if((x - radius) < 0 || (x + radius) > X || (y - radius) < 0 || (y + radius) > Y || (twoD) ? false : ((z - radius) < 0 || (z + radius) > Z))
+        if((x - radius) < 0 || (x + radius) > X || (y - radius) < 0 || (y + radius) > Y || ((twoD) ? false : ((z - radius) < 0 || (z + radius) > Z)))
           {
             return indexListT({ -1 });
           }

@@ -560,12 +560,6 @@ int main(int argc, char **argv) {
       
       for (int i=0;i<ns;i++) output2 << nspecies[i] << " ";
       output2 << std::endl;
-
-      if (!(s%100)) {
-        std::cout << s  << " " << dt*s  << " ";
-        for (int i=0;i<ns;i++) std::cout << nspecies[i] << " ";
-        std::cout << std::endl;
-      }
      ///GHETTOCODE///////////////////////////////////////////////////////
 
 
@@ -574,6 +568,10 @@ int main(int argc, char **argv) {
       //  output << "wtf has happened?\n" << std::endl;
       if(s % printSteps == 0)
         {
+          std::cout << s  << " " << dt*s  << " ";
+          for (int i=0;i<ns;i++) std::cout << nspecies[i] << " ";
+          std::cout << std::endl;
+
           if(outputType.compare("pizza") == 0)
             {
               output << "ITEM: TIMESTEP" << std::endl;
