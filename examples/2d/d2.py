@@ -15,7 +15,8 @@ import scipy.stats
 
 rho = 0.1
 total = 2000
-volFracts = numpy.linspace(0.001, 0.3, 25)
+X = 100.0
+volFracts = numpy.linspace(0.01, 0.3, 25)
 
 repeats = 1
 
@@ -28,12 +29,16 @@ pool = Pool(4)
 
 out = []
 
-dt = 0.01
+dt = 0.001
 # For all the possible volume fractions, compute an effective diffusion coefficient
 # Volume fraction = area of particle * number of particles / volume_of_surface
 for v in volFracts:
-    X = math.sqrt(numpy.pi * total / v)
+    total = int(X * X * v / numpy.pi)
+    #print total
+    #X = math.sqrt(numpy.pi * total / v)
     #distsSq = []
+
+    printSteps = 10000
 
     # Run a simulation on an X*X surface
     # Timestep = 0.01
@@ -44,8 +49,8 @@ for v in volFracts:
                "Y" : X,
                #"Z" : X,
 	       "dt" : dt,
-               "steps" : 200,
-               "printSteps" : 1,
+               "steps" : 400000,
+               "printSteps" : printSteps,
                "monatomic" : [],
                "binary" : [],
                "atomsDist" : [{"type" : 1, "number" : total}],
@@ -62,7 +67,9 @@ for v in volFracts:
     #print outData
     
     h = subprocess.Popen(shlex.split("./bd_run {0} {1} {2} pizza".format(inData, outData, int(random.random() * 1000000000))), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-    stdout, stderr = h.communicate()
+    h.wait()
+
+    print 'hi'
     
     #print stdout
         #print stdout, stderr
@@ -85,7 +92,8 @@ for v in volFracts:
     #
     readTime = False
     readNext = False
-    for line in h.readlines():
+    lines = list(h.readlines())
+    for line in lines:
         if readTime:
             time = int(line)
 
@@ -109,7 +117,7 @@ for v in volFracts:
 
     dists = {}
 
-    #os.remove(outData)
+    os.remove(outData)
 
     # Compute a graph of time separation vs. MSD
     #
@@ -150,13 +158,12 @@ for v in volFracts:
 
     output = {}
     for d in dists:
-        #print d, len(dists[d])
         output[d] = [numpy.mean(dists[d]), scipy.stats.sem(dists[d])]
 
     distsSq = output#work((0, inData))
 
     times, valuesStds = zip(*sorted(distsSq.items(), key = lambda x : x[0]))
-    times = numpy.array(times) * dt;
+    times = numpy.array(times) * printSteps * dt;
 
     values, stds = zip(*valuesStds)
 
