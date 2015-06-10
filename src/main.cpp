@@ -95,41 +95,42 @@ int main(int argc, char **argv) {
   json_t *type = json_object_get(root, "simType");
 
   BoxType boxType;
+  bool twoD = false;
 
   if(type == NULL || !json_is_string(type))
     {
       boxType = BoxType::periodicBox;
     }
-      else if(strcmp(json_string_value(type), "ellipsoid") == 0)
-        {
-          boxType = BoxType::ellipsoid;
-        }
-      else if(strcmp(json_string_value(type), "capsule") == 0)
-        {
-          boxType = BoxType::capsule;
-        }
-      else if(strcmp(json_string_value(type), "cylinder") == 0)
-        {
-          boxType = BoxType::cylinder;
-        }
-      else if(strcmp(json_string_value(type), "boxWithWalls") == 0)
-        {
-          boxType = BoxType::boxWithWalls;
-        }
-      else if(strcmp(json_string_value(type), "periodicBox") == 0)
-        {
-          boxType = BoxType::periodicBox;
-        }
-      else
-        {
-          std::cout << "simType must be defined as either \"ellipsoid\", or \"capsule\" or \"cylinder\", or \"boxWithWalls\", or \"periodicBox\"" << std::endl;
+  else if(strcmp(json_string_value(type), "ellipsoid") == 0)
+    {
+      boxType = BoxType::ellipsoid;
+    }
+  else if(strcmp(json_string_value(type), "capsule") == 0)
+    {
+      boxType = BoxType::capsule;
+    }
+  else if(strcmp(json_string_value(type), "cylinder") == 0)
+    {
+      boxType = BoxType::cylinder;
+    }
+  else if(strcmp(json_string_value(type), "boxWithWalls") == 0)
+    {
+      boxType = BoxType::boxWithWalls;
+    }
+  else if(strcmp(json_string_value(type), "periodicBox") == 0)
+    {
+      boxType = BoxType::periodicBox;
+    }
+  else
+    {
+      std::cout << "simType must be defined as either \"ellipsoid\", or \"capsule\" or \"cylinder\", or \"boxWithWalls\", or \"periodicBox\"" << std::endl;
       
-          if(Xj != NULL)
-            json_decref(root);
+      if(Xj != NULL)
+        json_decref(root);
       
-          return 1;
-        }
-
+      return 1;
+    }
+  
   if(Xj == NULL || !json_is_number(Xj))
     {
       std::cout << "X must be a number" << std::endl;
@@ -150,7 +151,13 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-  if(Zj == NULL || !json_is_number(Zj))
+  if(Zj == NULL)
+    {
+      std::cout << "No Z coordinate found. Enforcing 2D mode!" << std::endl;
+      twoD = true;
+    }
+
+  if(!twoD && !json_is_number(Zj))
     {
       std::cout << "Z must be a number" << std::endl;
       
@@ -192,7 +199,7 @@ int main(int argc, char **argv) {
 
   X = json_number_value(Xj);
   Y = json_number_value(Yj);
-  Z = json_number_value(Zj);
+  Z = (twoD) ? X : json_number_value(Zj);
   steps = json_integer_value(stepsj);
   printSteps = json_integer_value(printStepsj);
   dt = json_number_value(dtj);
@@ -390,7 +397,7 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-  Particles parts(maxR, X, Y, Z, boxType, reacs);
+  Particles parts(maxR, X, Y, Z, boxType, twoD, reacs);
 
   if(atomsArray != NULL)
     {
@@ -500,7 +507,7 @@ int main(int argc, char **argv) {
                 {
                   double x = X * uniform(generator),
                     y = Y * uniform(generator),
-                    z = Z * uniform(generator);
+                    z = (twoD) ? Z * 0.5 : Z * uniform(generator);
 
                   Particles::indexListT indexList = parts.collide(x, y, z, type);
 
@@ -524,22 +531,47 @@ int main(int argc, char **argv) {
 
   std::cout << "Total number of particles at time 0: " << parts.particles.size() << std::endl;
 
+///////////////////////////////////////////
+  int ns = (int)json_array_size(aTypes);
+  int nspecies[ns];
+//////////////////////////////////////////
+
   json_decref(root);
 
   std::ofstream output;
+  std::ofstream output2; 
 
   output.open(outFileName);
+  output2.open("pop-"+outFileName);
   //output << "reaction fired" << std::endl;
 
   std::cout << "Reactive Brownian Dynamics starts ... (Random Seed = " << argv[3] << ")" << std::endl;
 
   for(int s = 0; s < steps; s++)
     {
-      if (!(s%100)) std::cout << s  << " " << dt*s  << " " << parts.particles.size() << std::endl;
+
+     ///GHETTOCODE///////////////////////////////////////////////////////
+      for (int i=0;i<ns;i++) nspecies[i] = 0;
+        for(auto it = parts.particles.begin(); it != parts.particles.end(); it++)
+          {
+              Particle &p = it->second;
+              nspecies[(int)(p.type-1)] += 1;
+	  }
+      
+      for (int i=0;i<ns;i++) output2 << nspecies[i] << " ";
+      output2 << std::endl;
+     ///GHETTOCODE///////////////////////////////////////////////////////
+
+
+
       //if(parts.particles.size() < 2)
       //  output << "wtf has happened?\n" << std::endl;
       if(s % printSteps == 0)
         {
+          std::cout << s  << " " << dt*s  << " ";
+          for (int i=0;i<ns;i++) std::cout << nspecies[i] << " ";
+          std::cout << std::endl;
+
           if(outputType.compare("pizza") == 0)
             {
               output << "ITEM: TIMESTEP" << std::endl;
@@ -609,7 +641,7 @@ int main(int argc, char **argv) {
                 {
                   nx = X * uniform(generator);
                   ny = Y * uniform(generator);
-                  nz = Z * uniform(generator);
+                  nz = (twoD) ? Z * 0.5 : Z * uniform(generator);
 
                   //Check if it will be possible to insert a B atom
                   auto touching = parts.collide(nx, ny, nz, Btype);
@@ -633,7 +665,7 @@ int main(int argc, char **argv) {
 
                       //std::cout << r << std::endl;
                   
-                      double theta = pi * uniform(generator);
+                      double theta = (twoD) ? pi / 2.0 : pi * uniform(generator);
                       double phi = 2 * pi * uniform(generator);
                   
                       initialized = true; // We initialized xx, yy, zz
@@ -701,7 +733,7 @@ int main(int argc, char **argv) {
 
           double dx = gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
           double dy = gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
-          double dz = gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
+          double dz = (twoD) ? 0.0 : gaussian(generator) * sqrt(2 * reacs.bam[p.type].D * dt);
 
           double nx = p.x + dx, ny = p.y + dy, nz = p.z + dz;
 
@@ -774,7 +806,7 @@ int main(int argc, char **argv) {
 
                           //std::cout << r << std::endl;
                   
-                          double theta = pi * uniform(generator);
+                          double theta = (twoD) ? pi * 0.5 : pi * uniform(generator);
                           double phi = 2 * pi * uniform(generator);
                   
                           initialized = true; // We initialized xx, yy, zz
@@ -878,14 +910,14 @@ int main(int argc, char **argv) {
 
               int Ctype = reaction.C;
               int Dtype = reaction.D;
+
+              int tries = 0;
+              double xx, yy, zz;
+              bool initialized = false; // This is just for sanity's sake. It's possible we used xx, yy, and zz unitialized. Let's make sure this doesn't happend
               //If there is no Ctype, better be no Dtype. This is a destruction reac!
+
               if(Ctype > 0)
                 {
-                  int tries = 0;
-
-                  double xx, yy, zz;
-                  bool initialized = false; // This is just for sanity's sake. It's possible we used xx, yy, and zz unitialized. Let's make sure this doesn't happend
-
                   for(tries = 0; tries < maxTries; tries++)
                     {
                       //Check if it will be possible to insert a C atom
@@ -913,7 +945,7 @@ int main(int argc, char **argv) {
 
                           //std::cout << r << std::endl;
                   
-                          double theta = pi * uniform(generator);
+                          double theta = (twoD) ? pi * 0.5 : pi * uniform(generator);
                           double phi = 2 * pi * uniform(generator);
                   
                           initialized = true; // We initialized xx, yy, zz
@@ -938,40 +970,40 @@ int main(int argc, char **argv) {
                       // If we got this far, any necessary reaction products have been successfully inserted
                       break;
                     }
+                }
 
-                  // If we failed to insert the new atoms, reject the move and go on
-                  if(tries == maxTries)
-                    {
-                      //std::cout << "things aren't fitting" << std::endl;
-
-                      continue;
-                    }
-                  else
-                    { 
-                      // Get rid of the reacted particle
-                      deleted.insert(pid);
-                      deleted.insert(pjd);
-
-                      //std::cout << "Monatomic reaction" << pid << std::endl;
-                      parts.deleteParticle(pid);
-                      parts.deleteParticle(pjd);
+              // If we failed to insert the new atoms, reject the move and go on
+              if(tries == maxTries)
+                {
+                  //std::cout << "things aren't fitting" << std::endl;
                   
-                      // Insert the two products
-                      if(Ctype > 0)
+                  continue;
+                }
+              else
+                { 
+                  // Get rid of the reacted particle
+                  deleted.insert(pid);
+                  deleted.insert(pjd);
+                  
+                  //std::cout << "Monatomic reaction" << pid << std::endl;
+                  parts.deleteParticle(pid);
+                  parts.deleteParticle(pjd);
+                  
+                  // Insert the two products
+                  if(Ctype > 0)
+                    {
+                      parts.insertParticle(nx, ny, nz, Ctype);
+                      
+                      if(Dtype > 0)
                         {
-                          parts.insertParticle(nx, ny, nz, Ctype);
-
-                          if(Dtype > 0)
+                          if(initialized == false)
                             {
-                              if(initialized == false)
-                                {
-                                  std::cout << "xx, yy, and zz are not initialized!" << std::endl;
-                                  exit(-1);
-                                }
-                              else
-                                {
-                                  parts.insertParticle(xx, yy, zz, Dtype);
-                                }
+                              std::cout << "xx, yy, and zz are not initialized!" << std::endl;
+                              exit(-1);
+                            }
+                          else
+                            {
+                              parts.insertParticle(xx, yy, zz, Dtype);
                             }
                         }
                     }
@@ -1000,4 +1032,5 @@ int main(int argc, char **argv) {
         }
     }
   output.close();
+  output2.close();
 }
