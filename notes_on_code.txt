@@ -1,0 +1,38 @@
+There are three hpp include files:
+nn.hpp
+util.hpp
+Reactions.hpp
+
+and one cpp file:
+main.cpp
+
+The following containers are used:
+
+set:
+Sets are a type of associative containers in which each element has to be unique, because the value of the element identifies it. The value of the element cannot be modified once it is added to the set, though it is possible to remove and add the modified value of that element.
+
+map:
+Maps are associative containers that store elements in a mapped fashion. Each element has a key value and a mapped value. No two mapped values can have same key values.
+Maps are dictionary like data structures. They are sequences of (key, value) pairs, where only single value is associated with each unique key. Maps are often referred as associative arrays. In maps key values are generally used to sort the elements.
+
+Use std::map when
+- You need ordered data.
+- You would have to print/access the data (in sorted order).
+- You need predecessor/successor of elements.
+
+
+unordered_map:
+Unordered_map is an associated container that stores elements formed by combination of key value and a mapped value. The key value is used to uniquely identify the element and mapped value is the content associated with the key. 
+
+Use std::unordered_map when
+You need to keep count of some data (Example – strings) and no ordering is required.
+You need single element access i.e. no traversal.
+
+
+vector:
+Vectors are same as dynamic arrays with the ability to resize itself automatically when an element is inserted or deleted, with their storage being handled automatically by the container. Vector elements are placed in contiguous storage so that they can be accessed and traversed using iterators. In vectors, data is inserted at the end. Inserting at the end takes differential time, as sometimes there may be a need of extending the array. Removing the last element takes only constant time because no resizing happens. Inserting and erasing at the beginning or in the middle is linear in time.
+
+######
+
+The header <algorithm> defines a collection of functions especially designed to be used on ranges of elements. A range is any sequence of objects that can be accessed through iterators or pointers, such as an array or an instance of some of the STL containers. Notice though, that algorithms operate through iterators directly on the values, not affecting in any way the structure of any possible container (it never affects the size or storage allocation of the container).
+
